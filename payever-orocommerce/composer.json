@@ -1,0 +1,26 @@
+{
+    "name": "payever/payever-orocommerce",
+    "description": "Payever Plugin for OroCommerce",
+    "require": {
+        "oro/commerce": "5.1.*",
+        "payever/core-sdk-php": "1.1.5",
+        "payever/plugins-sdk-php": "1.2.0",
+        "payever/payments-sdk-php": "1.2.4",
+        "payever/products-sdk-php": "1.1.0"
+    },
+    "repositories": {
+        "oro": {
+            "type": "composer",
+            "url": "https://packagist.orocrm.com"
+        },
+        "asset-packagist": {
+            "type": "composer",
+            "url": "https://asset-packagist.orocrm.com"
+        }
+    },
+    "autoload": {
+        "psr-4": {"Payever\\Bundle\\PaymentBundle\\": "src"}
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": false
+}

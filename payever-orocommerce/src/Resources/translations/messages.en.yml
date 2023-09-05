@@ -1,0 +1,140 @@
+payever:
+  channel_type:
+    label: Payever
+  admin:
+    synchronization:
+      button:
+        label: Synchronize
+      error: Synchronization has been failed. Please check credentials and try it again.
+      success: Synchronization has been finished.
+    download_logs:
+      button:
+        label: Download logs
+    clean_logs:
+      button:
+        label: Clean logs
+      success: Logs have been cleaned.
+  configuration:
+    payever_settings: Payever Settings
+    payment_settings: Payment Settings
+    payment_methods_synchronization: Payment Methods Synchronization
+    payever_utilities: Utilities
+  system_configuration:
+    fields:
+      client_id:
+        label: Client ID
+        tooltip: Client ID.
+      client_secret:
+        label: Client Secret
+        tooltip: Client Secret.
+      business_uuid:
+        label: Business UUID
+        tooltip: Business UUID.
+      mode:
+        label: Mode
+        tooltip: Mode.
+        choices:
+          live: Live
+          sandbox: Sandbox
+      log_level:
+        label: Logging level
+        tooltip: Logging level.
+        choices:
+          info: Critical Messages
+          error: Critical + Info Messages
+          debug: All Messages
+      is_redirect:
+        label: Redirect to payever
+        tooltip: Check to get redirected to payever on a new page or leave blank to use an iframe.
+      synchronize_button:
+        label: Synchronize payment methods
+  settings:
+    labels:
+      label: Labels
+      tooltip: This label is used on the checkout screens.
+    short_labels:
+      label: Short Labels
+      tooltip: This label is used in order history.
+    transport:
+      label: Transport
+    payment_method:
+      label: Payment Method
+    variant_id:
+      label: Variant ID
+    description_offer:
+      label: Description offer
+    description_fee:
+      label: Description fee
+    is_redirect_method:
+      label: Redirect mode
+    is_submit_method:
+      label: Submit mode
+    instruction_text:
+      label: Instruction text
+    thumbnail:
+      label: Thumbnail
+    currencies:
+      label: Allowed currencies
+    countries:
+      label: Allowed countries
+    is_shipping_address_allowed:
+      label: Shipping address allowed
+    is_shipping_address_equality:
+      label: Shipping address equality
+    max:
+      label: Max allowed amount
+    min:
+      label: Min allowed amount
+    is_accept_fee:
+      label: Is accept fee
+    fixed_fee:
+      label: Fixed fee
+    variable_fee:
+      label: Variable fee
+    mode:
+      label: Mode
+      tooltip: Mode.
+      live: Live
+      sandbox: Sandbox
+    log_level:
+      label: Logging level
+      tooltip: Logging level.
+      info: Critical Messages
+      error: Critical + Info Messages
+      debug: All Messages
+    redirect:
+      label: Redirect to payever
+      tooltip: Check to get redirected to payever on a new page or leave blank to use an iframe.
+  errors:
+    payment_cancelled: Payment has been cancelled
+    payment_failed: Payment has been failed
+  messages:
+    pending_payment: Please note that since your payment is not yet final, we will put your order on hold until we have received confirmation from the bank.
+  order:
+    action:
+      payment_information.label: Payever Information
+    payment_transaction:
+      cancel:
+        message: Payment will be cancelled
+      capture:
+        message: Payment will be captured
+      refund:
+        message: Payment will be refunded
+  fields:
+    payever_id: Payever ID
+    status: Status
+    total: Total
+    specific_status: Specific status
+    customer_name: Customer name
+    customer_email: Customer email
+    application_number: Application number
+    application_status: Application status
+    usage_text: Usage text
+  constraints:
+    localized_range:
+      min_message: "Minimum value: {min}"
+      max_message: "Maximum value: {max}"
+  payment:
+    cancel_authorization: Cancel payment by amount
+    capture: Capture payment by amount
+    refund: Refund payment by amount

@@ -1,0 +1,99 @@
+{% block payever_settings_widget %}
+    {{ form_widget(form) }}
+{% endblock %}
+
+{% block payever_synchronize_widget_widget %}
+    {% set options = {
+            'synchronizationUrl': path('payever_payment_synchronize')
+    } %}
+    <div data-page-component-module="payeverpayment/js/app/components/synchronize-component"
+         data-page-component-options="{{ options|json_encode }}">
+        <button class="btn btn-primary" type="{{ type|default('button') }}" {{ block('button_attributes') }}>{{ label|trans({}, translation_domain) }}</button>
+        <div class="synchronization-status alert" role="alert" style="display: none"></div>
+    </div>
+{% endblock %}
+
+{% block payever_synchronize_button_row %}
+    {{ block('button_row') }}
+{% endblock %}
+
+{% block _payever_settings_payever_payment___synchronize_button_value_errors %}
+
+{% endblock %}
+
+{% block payever_settings_payever_payment___synchronize_button %}
+
+{% endblock %}
+
+{% block payever_download_logs %}
+    {{ form_widget(form) }}
+{% endblock %}
+
+{% block payever_download_logs_widget %}
+    <div>
+        <button id="payever_download_logs" class="btn btn-primary" type="{{ type|default('button') }}" {{ block('button_attributes') }}>Download logs</button>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                setInterval(function() {
+                    document.getElementById('payever_download_logs').disabled = false;
+                }, 1000);
+
+                document.addEventListener('click', function (event) {
+                    if (!event.target.matches('#payever_download_logs')) return;
+                    event.preventDefault();
+                    window.location.href = '{{ path('payever_payment_download_logs') }}';
+                }, false);
+            });
+        </script>
+    </div>
+{% endblock %}
+
+{% block payever_download_logs_row %}
+    {{ block('button_row') }}
+{% endblock %}
+
+{% block payever_download_logs_errors %}
+
+{% endblock %}
+
+{% block payever_clean_logs %}
+    {{ form_widget(form) }}
+{% endblock %}
+
+{% block payever_clean_logs_widget %}
+    <div>
+        <button id="payever_clean_logs" class="btn btn-primary" type="{{ type|default('button') }}" {{ block('button_attributes') }}>Clean logs</button>
+        <div id="clean_logs_status" class="alert" role="alert" style="display: none"></div>
+        <script>
+            const payever_clean_logs_url = '{{ path('payever_payment_clean_logs') }}';
+
+            document.addEventListener("DOMContentLoaded", function() {
+                setInterval(function() {
+                    document.getElementById('payever_clean_logs').disabled = false;
+                }, 1000);
+
+                document.addEventListener('click', function (event) {
+                    if (!event.target.matches('#payever_clean_logs')) return;
+                    event.preventDefault();
+
+                    $.getJSON(
+                        payever_clean_logs_url,
+                        {},
+                        function(response) {
+                            document.getElementById('clean_logs_status').style.display = 'block';
+                            document.getElementById('clean_logs_status').innerText = response.message
+                        }
+                    );
+                }, false);
+            });
+        </script>
+    </div>
+{% endblock %}
+
+{% block payever_clean_logs_row %}
+    {{ block('button_row') }}
+{% endblock %}
+
+{% block payever_clean_logs_errors %}
+
+{% endblock %}

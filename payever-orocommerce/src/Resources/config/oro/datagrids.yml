@@ -1,0 +1,18 @@
+datagrids:
+  order-payment-transactions-grid:
+    properties:
+      payever_payment_transaction_information_link:
+        type: url
+        route: payever_payment_transaction_info
+        params: { paymentTransactionId: id }
+    actions:
+      transaction_info:
+        type: dialog
+        label: payever.order.action.payment_information.label
+        link:  payever_payment_transaction_information_link
+        icon: info-circle
+        widgetOptions:
+          options:
+            dialogOptions:
+              title: "@translator->trans(payever.order.action.payment_information.label)"
+    action_configuration: ['@payever.datagrid.order_payment_transactions.action_permission_provider', "getActionPermissions"]

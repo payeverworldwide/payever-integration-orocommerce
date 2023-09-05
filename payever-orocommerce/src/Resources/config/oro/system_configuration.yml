@@ -1,0 +1,138 @@
+system_configuration:
+  groups:
+    payever_settings:
+      title: payever.configuration.payever_settings
+      icon: icon-payever
+    payment_payever_settings:
+      title: payever.configuration.payment_settings
+    payever_payment_methods_synchronization:
+      title: payever.configuration.payment_methods_synchronization
+    payever_utilities:
+      title: payever.configuration.payever_utilities
+
+  fields:
+    payever_payment.client_id:
+      data_type: string
+      type: Symfony\Component\Form\Extension\Core\Type\TextType
+      search_type: text
+      options:
+        label: payever.system_configuration.fields.client_id.label
+        tooltip: payever.system_configuration.fields.client_id.tooltip
+        required: true
+        constraints:
+          - NotBlank: ~
+        attr:
+          class: pe-client-id
+    payever_payment.client_secret:
+      data_type: string
+      type: Symfony\Component\Form\Extension\Core\Type\TextType
+      search_type: text
+      options:
+        label: payever.system_configuration.fields.client_secret.label
+        tooltip: payever.system_configuration.fields.client_secret.tooltip
+        required: true
+        constraints:
+          - NotBlank: ~
+        attr:
+          class: pe-client-secret
+    payever_payment.business_uuid:
+      data_type: string
+      type: Symfony\Component\Form\Extension\Core\Type\TextType
+      search_type: text
+      options:
+        label: payever.system_configuration.fields.business_uuid.label
+        tooltip: payever.system_configuration.fields.business_uuid.tooltip
+        required: true
+        constraints:
+          - NotBlank: ~
+        attr:
+          class: pe-business-uuid
+    payever_payment.is_redirect:
+      data_type: boolean
+      type: Oro\Bundle\ConfigBundle\Form\Type\ConfigCheckbox
+      options:
+        label: payever.system_configuration.fields.is_redirect.label
+        tooltip: payever.system_configuration.fields.is_redirect.tooltip
+    payever_payment.mode:
+      data_type: choice
+      type: Symfony\Component\Form\Extension\Core\Type\ChoiceType
+      search_type: choice
+      options:
+        label: payever.system_configuration.fields.mode.label
+        tooltip: payever.system_configuration.fields.mode.tooltip
+        required: true
+        constraints:
+          - NotBlank: ~
+        choices:
+          payever.system_configuration.fields.mode.choices.live: live
+          payever.system_configuration.fields.mode.choices.sandbox: sandbox
+        attr:
+          class: pe-mode
+    payever_payment.log_level:
+      data_type: choice
+      type: Symfony\Component\Form\Extension\Core\Type\ChoiceType
+      search_type: choice
+      options:
+        label: payever.system_configuration.fields.log_level.label
+        tooltip: payever.system_configuration.fields.log_level.tooltip
+        required: true
+        constraints:
+          - NotBlank: ~
+        choices:
+          payever.system_configuration.fields.log_level.choices.info: info
+          payever.system_configuration.fields.log_level.choices.error: error
+          payever.system_configuration.fields.log_level.choices.debug: debug
+    payever_payment.oauth_token:
+      data_type: string
+      type: Symfony\Component\Form\Extension\Core\Type\HiddenType
+    payever_payment.sandbox_url:
+      data_type: string
+      type: Symfony\Component\Form\Extension\Core\Type\HiddenType
+    payever_payment.live_url:
+      data_type: string
+      type: Symfony\Component\Form\Extension\Core\Type\HiddenType
+    payever_payment.synchronize_button:
+      ui_only:
+      type: Payever\Bundle\PaymentBundle\Form\Type\SynchronizeButtonType
+      options:
+        label: payever.admin.synchronization.button.label
+        resettable: false
+    payever_payment.download_logs:
+      ui_only:
+      type: Payever\Bundle\PaymentBundle\Form\Type\DownloadLogsButtonType
+      options:
+        label: payever.admin.download_logs.button.label
+        resettable: false
+    payever_payment.clean_logs:
+      ui_only:
+      type: Payever\Bundle\PaymentBundle\Form\Type\CleanLogsButtonType
+      options:
+        label: payever.admin.clean_logs.button.label
+        resettable: false
+  tree:
+    system_configuration:
+      platform:
+        children:
+          integrations:
+            children:
+              payever_settings:
+                priority: -30
+                children:
+                  payment_payever_settings:
+                    priority: 30
+                    children:
+                      - payever_payment.client_id
+                      - payever_payment.client_secret
+                      - payever_payment.business_uuid
+                      - payever_payment.is_redirect
+                      - payever_payment.mode
+                      - payever_payment.log_level
+                  payever_payment_methods_synchronization:
+                    priority: 20
+                    children:
+                      - payever_payment.synchronize_button
+                  payever_utilities:
+                    priority: 10
+                    children:
+                      - payever_payment.download_logs
+                      - payever_payment.clean_logs

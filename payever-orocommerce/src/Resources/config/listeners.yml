@@ -1,0 +1,24 @@
+services:
+  payever.event_listener.callback.checkout_listener:
+    class: Payever\Bundle\PaymentBundle\EventListener\PaymentCallbackListener
+    lazy: true
+    tags:
+      - { name: kernel.event_listener, event: oro_payment.callback.return, method: onReturn, priority: 21 }
+      - { name: kernel.event_listener, event: oro_payment.callback.error, method: onError, priority: 21 }
+      - { name: kernel.event_listener, event: oro_payment.callback.notify, method: onNotify, priority: 21 }
+    arguments:
+      - '@payever.payment_method_provider.payever'
+      - '@payever.payment_method.config.provider'
+      - '@payever.service.payment.payment_processor'
+      - '@payever.service.payment.notification_request_processor'
+      - '@request_stack'
+      - '@session'
+      - '@payever.service.logger'
+
+  payever.event_listener.order_payment_transaction_grid:
+    class: Payever\Bundle\PaymentBundle\EventListener\OrderPaymentTransactionsGridListener
+    arguments:
+      - '@doctrine'
+      - '@payever.payment_method_provider.payever'
+    tags:
+      - { name: kernel.event_listener, event: oro_datagrid.datagrid.build.before.order-payment-transactions-grid, method: onBuildBefore }

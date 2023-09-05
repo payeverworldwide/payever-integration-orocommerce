@@ -1,0 +1,3 @@
+dynamic-imports:
+  oroimap:
+    - payeverpayment/js/app/components/synchronize-component

@@ -1,0 +1,46 @@
+services:
+  payever_payment.payment_action.registry:
+    class: Payever\Bundle\PaymentBundle\Method\PaymentAction\PaymentActionRegistry
+    arguments:
+      - !tagged_iterator payever_payment.payment_actions
+
+  payever_payment.payment_action.purchase_action:
+    class: Payever\Bundle\PaymentBundle\Method\PaymentAction\PurchasePaymentAction
+    arguments:
+      - '@payever.service.payment.payment_processor'
+      - '@payever.service.logger'
+    tags:
+      - { name: payever_payment.payment_actions }
+
+  payever_payment.payment_action.cancel_action:
+    class: Payever\Bundle\PaymentBundle\Method\PaymentAction\CancelPaymentAction
+    arguments:
+      - '@payever.service.helper.transaction'
+      - '@payever.service.payment.action.cancel'
+      - '@oro_payment.provider.payment_transaction'
+      - '@payever.service.logger'
+      - '@payever.sdk.core.lock.file_lock'
+    tags:
+      - { name: payever_payment.payment_actions }
+
+  payever_payment.payment_action.refund_action:
+    class: Payever\Bundle\PaymentBundle\Method\PaymentAction\RefundPaymentAction
+    arguments:
+      - '@payever.service.helper.transaction'
+      - '@payever.service.payment.action.refund'
+      - '@oro_payment.provider.payment_transaction'
+      - '@payever.service.logger'
+      - '@payever.sdk.core.lock.file_lock'
+    tags:
+      - { name: payever_payment.payment_actions }
+
+  payever_payment.payment_action.capture_action:
+    class: Payever\Bundle\PaymentBundle\Method\PaymentAction\CapturePaymentAction
+    arguments:
+      - '@payever.service.helper.transaction'
+      - '@payever.service.payment.action.shipping'
+      - '@oro_payment.provider.payment_transaction'
+      - '@payever.service.logger'
+      - '@payever.sdk.core.lock.file_lock'
+    tags:
+      - { name: payever_payment.payment_actions }

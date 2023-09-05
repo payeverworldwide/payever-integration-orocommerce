@@ -1,0 +1,45 @@
+services:
+  _defaults:
+    public: true
+
+  Payever\Bundle\PaymentBundle\Controller\PaymentTransactionController:
+    calls:
+      - [setContainer, ['@Psr\Container\ContainerInterface']]
+    tags:
+      - { name: container.service_subscriber }
+      - { name: container.service_subscriber, id: Payever\Bundle\PaymentBundle\Method\Provider\PayeverMethodProvider }
+      - { name: controller.service_arguments }
+
+  Payever\Bundle\PaymentBundle\Controller\SynchronizationController:
+    calls:
+      - [setContainer, ['@Psr\Container\ContainerInterface']]
+    tags:
+      - { name: container.service_subscriber }
+      - { name: container.service_subscriber, id: Payever\Bundle\PaymentBundle\Service\Api\ServiceProvider }
+      - { name: container.service_subscriber, id: Symfony\Contracts\Translation\TranslatorInterface }
+      - { name: container.service_subscriber, id: Payever\Bundle\PaymentBundle\Service\Payment\PaymentOptionsService }
+      - { name: controller.service_arguments }
+
+  Payever\Bundle\PaymentBundle\Controller\DownloadLogsController:
+    calls:
+      - [ setContainer, [ '@Psr\Container\ContainerInterface' ] ]
+    tags:
+      - { name: container.service_subscriber }
+      - { name: container.service_subscriber, id: Payever\Bundle\PaymentBundle\Service\LogCollector }
+      - { name: controller.service_arguments }
+
+  Payever\Bundle\PaymentBundle\Controller\CleanLogsController:
+    calls:
+      - [ setContainer, [ '@Psr\Container\ContainerInterface' ] ]
+    tags:
+      - { name: container.service_subscriber }
+      - { name: container.service_subscriber, id: Symfony\Contracts\Translation\TranslatorInterface }
+      - { name: container.service_subscriber, id: Payever\Bundle\PaymentBundle\Service\LogCollector }
+      - { name: controller.service_arguments }
+
+  Payever\Bundle\PaymentBundle\Controller\Frontend\PaymentController:
+    calls:
+      - [setContainer, ['@Psr\Container\ContainerInterface']]
+    tags:
+      - { name: container.service_subscriber }
+      - { name: container.service_subscriber, id: payever.service.logger, key: Psr\Log\LoggerInterface }

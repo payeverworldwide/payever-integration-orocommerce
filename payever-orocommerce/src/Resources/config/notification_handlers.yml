@@ -1,0 +1,46 @@
+services:
+  payever_payment.notification_handler.registry:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\Notification\Handler\HandlerRegistry
+    arguments:
+      - !tagged_iterator payever_payment.notification_handler
+
+  payever_payment.notification_handler.notification_handler_abstract:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\Notification\Handler\NotificationHandlerAbstract
+    abstract: true
+    arguments:
+      - '@doctrine.orm.entity_manager'
+      - '@payever.service.payment.transaction_status_service'
+      - '@payever.service.management.order'
+      - '@payever.service.helper.transaction'
+      - '@oro_payment.provider.payment_transaction'
+      - '@payever.service.logger'
+
+  payever_payment.notification_handler.ship_items:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\Notification\Handler\ShipItemsHandler
+    parent: payever_payment.notification_handler.notification_handler_abstract
+    tags:
+      - { name: payever_payment.notification_handler }
+
+  payever_payment.notification_handler.ship_amount:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\Notification\Handler\ShipAmountHandler
+    parent: payever_payment.notification_handler.notification_handler_abstract
+    tags:
+      - { name: payever_payment.notification_handler }
+
+  payever_payment.notification_handler.refund_items:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\Notification\Handler\RefundItemsHandler
+    parent: payever_payment.notification_handler.notification_handler_abstract
+    tags:
+      - { name: payever_payment.notification_handler }
+
+  payever_payment.notification_handler.refund_amount:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\Notification\Handler\RefundAmountHandler
+    parent: payever_payment.notification_handler.notification_handler_abstract
+    tags:
+      - { name: payever_payment.notification_handler }
+
+  payever_payment.notification_handler.cancel_amount:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\Notification\Handler\CancelAmountHandler
+    parent: payever_payment.notification_handler.notification_handler_abstract
+    tags:
+      - { name: payever_payment.notification_handler }

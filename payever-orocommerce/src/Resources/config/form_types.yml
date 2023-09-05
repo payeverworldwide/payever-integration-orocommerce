@@ -1,0 +1,13 @@
+services:
+  payever.form.type.settings:
+    class: Payever\Bundle\PaymentBundle\Form\Type\PayeverSettingsType
+    arguments:
+      - '@translator'
+      - '@oro_address.provider.country'
+    tags:
+      - { name: form.type }
+
+  payever.form.type.synchronize:
+    class: Payever\Bundle\PaymentBundle\Form\Type\SynchronizeButtonType
+    tags:
+      - { name: form.type, alias: payever_synchronize_button }

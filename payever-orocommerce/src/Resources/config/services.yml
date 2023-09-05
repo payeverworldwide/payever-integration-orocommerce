@@ -1,0 +1,408 @@
+parameters:
+  payever.method.identifier_prefix: 'payever'
+
+services:
+  payever.service.logger.factory:
+    class: \Payever\Bundle\PaymentBundle\Service\LoggerFactory
+    arguments:
+      - '%kernel.logs_dir%/%%s_%kernel.environment%.log'
+      - '14'
+
+  # Logger
+  payever.service.logger:
+    class: Psr\Log\LoggerInterface
+    factory: [ '@payever.service.logger.factory', create ]
+    arguments:
+      - payever
+
+  # Payever Token List
+  payever.service.api.token_list:
+    class: Payever\Bundle\PaymentBundle\Service\Api\TokenList
+    public: true
+    arguments:
+      - '@oro_config.manager'
+
+  Payever\Bundle\PaymentBundle\Service\Api\TokenList:
+    alias: payever.service.api.token_list
+
+  # Payever Service Provider
+  payever.service.api.service_provider:
+    class: Payever\Bundle\PaymentBundle\Service\Api\ServiceProvider
+    public: true
+    arguments:
+      - '@payever.service.api.token_list'
+      - '@oro_config.manager'
+      - '@payever.service.logger'
+
+  # Data Helper
+  payever.service.helper.data:
+    class: Payever\Bundle\PaymentBundle\Service\Helper\DataHelper
+    public: true
+    arguments:
+      - '@oro_website.manager'
+      - '@oro_platform.composer.version_helper'
+      - '@oro_platform.provider.package'
+
+  Payever\Bundle\PaymentBundle\Service\Helper\DataHelper:
+    alias: payever.service.helper.data
+
+  # Url Helper
+  payever.service.helper.url:
+    class: Payever\Bundle\PaymentBundle\Service\Helper\UrlHelper
+    public: true
+    arguments:
+      - '@router'
+
+  Payever\Bundle\PaymentBundle\Service\Helper\UrlHelper:
+    alias: payever.service.helper.url
+
+  # Url Helper
+  payever.service.helper.order_item:
+    class: Payever\Bundle\PaymentBundle\Service\Helper\OrderItemHelper
+    public: true
+    arguments:
+      - '@translator'
+      - '@oro_attachment.manager'
+      - '@oro_tax.provider.tax_provider_registry'
+      - '@oro_payment.provider.surcharge'
+
+  Payever\Bundle\PaymentBundle\Service\Helper\OrderItemHelper:
+    alias: payever.service.helper.order_item
+
+  # Transaction Helper
+  payever.service.helper.transaction:
+    class: Payever\Bundle\PaymentBundle\Service\Helper\TransactionHelper
+    public: true
+    arguments:
+      - '@doctrine'
+      - '@oro_entity.doctrine_helper'
+      - '@oro_payment.provider.payment_transaction'
+
+  Payever\Bundle\PaymentBundle\Service\Helper\TransactionHelper:
+    alias: payever.service.helper.transaction
+
+  # Payever PaymentProcessor
+  payever.service.payment.payment_processor:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\PaymentProcessorService
+    public: true
+    arguments:
+      - '@payever.service.api.service_provider'
+      - '@oro_config.manager'
+      - '@payever.service.helper.data'
+      - '@payever.service.helper.url'
+      - '@payever.service.helper.order_item'
+      - '@oro_entity.doctrine_helper'
+      - '@oro_locale.helper.localization'
+      - '@payever.service.payment.transaction_status_service'
+      - '@payever.service.logger'
+
+  Payever\Bundle\PaymentBundle\Service\Payment\PaymentProcessorService:
+    alias: payever.service.payment.payment_processor
+
+  payever.service.payment.transaction_status_service:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\TransactionStatusService
+    public: true
+    arguments:
+      - '@doctrine.orm.entity_manager'
+      - '@oro_payment.repository.payment_transaction'
+      - '@payever.service.helper.transaction'
+      - '@payever.service.management.order'
+      - '@payever.service.logger'
+
+  Payever\Bundle\PaymentBundle\Service\Payment\TransactionStatusService:
+    alias: payever.service.payment.transaction_status_service
+
+  Payever\Bundle\PaymentBundle\Service\Api\ServiceProvider:
+    alias: payever.service.api.service_provider
+
+  payever.generator.payever_config_identifier:
+    parent: oro_integration.generator.prefixed_identifier_generator
+    public: true
+    arguments:
+      - '%payever.method.identifier_prefix%'
+
+  payever.integration.channel:
+    class: Payever\Bundle\PaymentBundle\Integration\PayeverChannelType
+    public: true
+    tags:
+      - { name: oro_integration.channel, type: payever }
+
+  Payever\Bundle\PaymentBundle\Integration\PayeverChannelType:
+    alias: payever.integration.channel
+
+  payever.integration.transport:
+    class: Payever\Bundle\PaymentBundle\Integration\PayeverTransport
+    public: false
+    tags:
+      - { name: oro_integration.transport, type: payever, channel_type: payever }
+
+  Payever\Bundle\PaymentBundle\Integration\PayeverTransport:
+    alias: payever.integration.transport
+
+  payever.factory.payever_config:
+    class: Payever\Bundle\PaymentBundle\Method\Config\Factory\PayeverConfigFactory
+    public: false
+    arguments:
+      - '@oro_locale.helper.localization'
+      - '@payever.generator.payever_config_identifier'
+
+  Payever\Bundle\PaymentBundle\Method\Config\Factory\PayeverConfigFactory:
+    alias: payever.factory.payever_config
+
+  payever.payment_method.config.provider:
+    class: Payever\Bundle\PaymentBundle\Method\Config\Provider\PayeverConfigProvider
+    arguments:
+      - '@doctrine'
+      - '@logger'
+      - '@payever.factory.payever_config'
+
+  Payever\Bundle\PaymentBundle\Method\Config\Provider\PayeverConfigProvider:
+    alias: payever.payment_method.config.provider
+
+  payever.factory.method_view.payever:
+    class: Payever\Bundle\PaymentBundle\Method\View\Factory\PayeverViewFactory
+    public: false
+    arguments:
+      - '@payever.factory.payever_config'
+
+  Payever\Bundle\PaymentBundle\Method\View\Factory\PayeverViewFactory:
+    alias: payever.factory.method_view.payever
+
+  payever.payment_method_view_provider.payever:
+    class: Payever\Bundle\PaymentBundle\Method\View\Provider\PayeverViewProvider
+    public: false
+    arguments:
+      - '@payever.payment_method.config.provider'
+      - '@payever.factory.method_view.payever'
+    tags:
+      - { name: oro_payment.payment_method_view_provider }
+
+  Payever\Bundle\PaymentBundle\Method\View\Provider\PayeverViewProvider:
+    alias: payever.payment_method_view_provider.payever
+
+  payever.factory.method.payever:
+    class: Payever\Bundle\PaymentBundle\Method\Factory\PayeverPaymentMethodFactory
+    public: false
+    arguments:
+      - '@payever_payment.payment_action.registry'
+
+  Payever\Bundle\PaymentBundle\Method\Factory\PayeverPaymentMethodFactory:
+    alias: payever.factory.method.payever
+
+  payever.payment_method_provider.payever:
+    class: Payever\Bundle\PaymentBundle\Method\Provider\PayeverMethodProvider
+    public: true
+    arguments:
+      - '@payever.payment_method.config.provider'
+      - '@payever.factory.method.payever'
+    tags:
+      - { name: oro_payment.payment_method_provider }
+
+  Payever\Bundle\PaymentBundle\Method\Provider\PayeverMethodProvider:
+    alias: payever.payment_method_provider.payever
+
+  payever.datagrid.order_payment_transactions.action_permission_provider:
+    class: Payever\Bundle\PaymentBundle\Datagrid\ActionPermissionProvider
+    public: true
+    arguments:
+      - '@payever.payment_method_provider.payever'
+      - '@doctrine.orm.entity_manager'
+
+  Payever\Bundle\PaymentBundle\Datagrid\ActionPermissionProvider:
+    alias: payever.datagrid.order_payment_transactions.action_permission_provider
+
+  payever.handler.payment_transaction:
+    class: Payever\Bundle\PaymentBundle\Handler\PaymentTransactionHandler
+    public: true
+    arguments:
+      - '@payever.payment_method_provider.payever'
+      - '@payever.service.payment.payment_processor'
+
+  Payever\Bundle\PaymentBundle\Handler\PaymentTransactionHandler:
+    alias: payever.handler.payment_transaction
+
+  payever.repository.order_totals:
+    alias: Payever\Bundle\PaymentBundle\Entity\Repository\OrderTotalsRepository
+    public: true
+
+  Payever\Bundle\PaymentBundle\Entity\Repository\OrderTotalsRepository:
+    parent: oro_entity.abstract_repository
+    public: true
+    arguments:
+      - 'Payever\Bundle\PaymentBundle\Entity\OrderTotals'
+    tags:
+      - { name: doctrine.repository_service }
+
+  payever.repository.order_items:
+    alias: Payever\Bundle\PaymentBundle\Entity\Repository\OrderItemsRepository
+    public: true
+
+  Payever\Bundle\PaymentBundle\Entity\Repository\OrderItemsRepository:
+    parent: oro_entity.abstract_repository
+    arguments:
+      - 'Payever\Bundle\PaymentBundle\Entity\OrderItems'
+    tags:
+      - { name: doctrine.repository_service }
+
+  payever.service.payment.payment_options_service:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\PaymentOptionsService
+    public: true
+    arguments:
+      - '@payever.service.api.service_provider'
+      - '@payever.service.payment.payment_rules_service'
+      - '@payever.service.helper.data'
+      - '@oro_config.manager'
+      - '@doctrine'
+      - '@doctrine.orm.entity_manager'
+      - '@oro_integration.delete_manager'
+      - '@payever.service.logger'
+  Payever\Bundle\PaymentBundle\Service\Payment\PaymentOptionsService:
+    alias: payever.service.payment.payment_options_service
+
+  payever.service.payment.payment_rules_service:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\PaymentRulesService
+    public: true
+    arguments:
+      - '@payever.service.helper.data'
+      - '@oro_config.manager'
+      - '@doctrine'
+      - '@doctrine.orm.entity_manager'
+      - '@oro_currency.config.currency'
+      - '@payever.service.logger'
+  Payever\Bundle\PaymentBundle\Service\Payment\PaymentRulesService:
+    alias: payever.service.payment.payment_rules_service
+
+  payever.service.management.order:
+    class: Payever\Bundle\PaymentBundle\Service\Management\OrderManager
+    public: true
+    arguments:
+      - '@doctrine'
+      - '@doctrine.orm.entity_manager'
+      - '@payever.service.factory.order_total'
+      - '@payever.service.factory.order_item'
+      - '@payever.service.helper.order_item'
+
+  Payever\Bundle\PaymentBundle\Service\Management\OrderManager:
+    alias: payever.service.management.order
+
+  Payever\Bundle\PaymentBundle\Entity\OrderTotals:
+    alias: payever.entity.order_totals
+
+  payever.entity.order_totals:
+    class: Payever\Bundle\PaymentBundle\Entity\OrderTotals
+    public: true
+
+  Payever\Bundle\PaymentBundle\Entity\OrderItems:
+    alias: payever.entity.order_items
+
+  payever.entity.order_items:
+    class: Payever\Bundle\PaymentBundle\Entity\OrderItems
+    public: true
+
+  payever.service.factory.order_item:
+    class: Payever\Bundle\PaymentBundle\Service\Factory\OrderItemFactory
+    public: true
+    arguments:
+      - '@payever.entity.order_items'
+
+  Payever\Bundle\PaymentBundle\Service\Factory\OrderItemFactory:
+    alias: payever.service.factory.order_item
+
+  payever.service.factory.order_total:
+    class: Payever\Bundle\PaymentBundle\Service\Factory\OrderTotalFactory
+    public: true
+    arguments:
+      - '@payever.entity.order_totals'
+
+  Payever\Bundle\PaymentBundle\Service\Factory\OrderTotalFactory:
+    alias: payever.entity.factory.order_totals
+
+  Payever\Sdk\Core\Lock\FileLock:
+    alias: payever.sdk.core.lock.file_lock
+
+  payever.sdk.core.lock.file_lock:
+    class: Payever\Sdk\Core\Lock\FileLock
+    public: true
+    arguments:
+      - '%kernel.cache_dir%'
+
+  Payever\Bundle\PaymentBundle\Service\Payment\Notification\NotificationHandler:
+    alias: payever.service.payment.notification_handler
+
+  payever.service.payment.notification_handler:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\Notification\NotificationHandler
+    public: true
+    arguments:
+      - '@payever.service.payment.transaction_status_service'
+      - '@payever_payment.notification_handler.registry'
+      - '@payever.service.logger'
+
+  Payever\Bundle\PaymentBundle\Service\Payment\Notification\NotificationRequestProcessor:
+    alias: payever.service.payment.notification_request_processor
+
+  payever.service.payment.notification_request_processor:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\Notification\NotificationRequestProcessor
+    public: true
+    arguments:
+      - '@payever.service.payment.notification_handler'
+      - '@payever.sdk.core.lock.file_lock'
+      - '@payever.service.logger'
+      - '@request_stack'
+      - '@payever.service.api.service_provider'
+      - '@oro_config.manager'
+
+  Payever\Bundle\PaymentBundle\Service\Payment\Action\CancelAction:
+    alias: payever.service.payment.action.cancel
+
+  payever.service.payment.action.cancel:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\Action\CancelAction
+    public: true
+    arguments:
+      - '@payever.service.api.service_provider'
+      - '@payever.service.management.order'
+      - '@payever.service.logger'
+
+  Payever\Bundle\PaymentBundle\Service\Payment\Action\RefundAction:
+    alias: payever.service.payment.action.refund
+
+  payever.service.payment.action.refund:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\Action\RefundAction
+    public: true
+    arguments:
+      - '@payever.service.api.service_provider'
+      - '@payever.service.management.order'
+      - '@payever.service.logger'
+
+  Payever\Bundle\PaymentBundle\Service\Payment\Action\ShippingAction:
+    alias: payever.service.payment.action.shipping
+
+  payever.service.payment.action.shipping:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\Action\ShippingAction
+    public: true
+    arguments:
+      - '@payever.service.api.service_provider'
+      - '@payever.service.management.order'
+      - '@payever.service.logger'
+
+  payever.formatter.money_value_type:
+    alias: oro_currency.formatter.money_value_type
+    public: true
+
+  payever.service.payment.allowed_actions:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\AllowedActionsService
+    public: true
+    arguments:
+      - '@payever.service.api.service_provider'
+      - '@payever.service.helper.transaction'
+      - '@payever.service.logger'
+
+  Payever\Bundle\PaymentBundle\Service\Payment\AllowedActionsService:
+    alias: payever.service.payment.allowed_actions
+
+  payever.service.log_collector:
+    class: Payever\Bundle\PaymentBundle\Service\LogCollector
+    arguments:
+      - '%kernel.logs_dir%'
+
+  Payever\Bundle\PaymentBundle\Service\LogCollector:
+    alias: payever.service.log_collector

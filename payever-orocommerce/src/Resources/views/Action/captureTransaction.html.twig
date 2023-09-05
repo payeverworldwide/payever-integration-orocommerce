@@ -1,0 +1,8 @@
+{% extends '@OroAction/Operation/form.html.twig' %}
+
+{% block widget_content_inner %}
+    <div class="alert alert-info" role="alert">
+        {{ 'payever.order.payment_transaction.capture.message'|trans() }}
+    </div>
+    {{ parent() }}
+{% endblock %}

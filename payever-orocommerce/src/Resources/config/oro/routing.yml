@@ -1,0 +1,11 @@
+payeverpayment:
+  resource: "@PayeverPaymentBundle/Controller/"
+  type: annotation
+  prefix: /payever
+
+payeverpayment_frontend:
+  resource: "@PayeverPaymentBundle/Controller/Frontend/PaymentController.php"
+  type: annotation
+  prefix: /payever_payments
+  options:
+    frontend: true

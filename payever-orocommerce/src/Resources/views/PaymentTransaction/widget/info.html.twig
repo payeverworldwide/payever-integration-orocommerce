@@ -1,0 +1,23 @@
+{% import '@OroUI/macros.html.twig' as UI %}
+
+<div class="widget-content">
+    <div class="row-fluid form-horizontal">
+        <div class="responsive-block">
+            <p class="text-center">
+                <img src="{{ asset('bundles/payeverpayment/img/logo_payever.png') }}"
+                     alt="{{ 'payever.frontend.logo_alt'|trans }}"/>
+            </p>
+
+            {{ UI.renderProperty('payever.fields.payever_id'|trans, payeverResponse.id) }}
+            {% set formatedAmount = (payeverResponse.total) |oro_format_currency({currency: payeverResponse.currency}) %}
+            {{ UI.renderProperty('payever.fields.total'|trans, formatedAmount) }}
+            {{ UI.renderProperty('payever.fields.status'|trans, payeverResponse.status) }}
+            {{ UI.renderProperty('payever.fields.specific_status'|trans, payeverResponse.specific_status) }}
+            {{ UI.renderProperty('payever.fields.customer_name'|trans, payeverResponse.customer_name) }}
+            {{ UI.renderProperty('payever.fields.customer_email'|trans, payeverResponse.customer_email) }}
+            {{ UI.renderProperty('payever.fields.application_number'|trans, payeverResponse.application_number) }}
+            {{ UI.renderProperty('payever.fields.application_status'|trans, payeverResponse.application_status) }}
+            {{ UI.renderProperty('payever.fields.usage_text'|trans, payeverResponse.usage_text) }}
+        </div>
+    </div>
+</div>

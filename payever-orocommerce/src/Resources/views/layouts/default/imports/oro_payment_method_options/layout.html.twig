@@ -1,0 +1,16 @@
+{% block _payment_methods_payever_widget %}
+    <div class="{{ class_prefix }}-form__payment-methods">
+        <table class="grid">
+            <tr>
+                <td>
+                    <img src="{{ view.options.thumbnail }}"
+                         alt="{{ view.options.payment_method|escape }}"/>
+                    {{ view.options.description_offer|escape }}
+                </td>
+            </tr>
+        </table>
+    </div>
+    {% set options = {
+        totalValue: view.options.total_value
+    } %}
+{% endblock %}
