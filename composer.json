@@ -1,6 +1,6 @@
 {
-    "name": "payever/payever-orocommerce",
-    "description": "Payever Plugin for OroCommerce",
+    "name": "payever/payever-integration-orocommerce",
+    "description": "Payever Integration for OroCommerce",
     "require": {
         "oro/commerce": "5.1.*",
         "payever/core-sdk-php": "1.1.5",

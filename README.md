@@ -97,7 +97,7 @@ Visit us at [www.getpayever.com/checkout](https://www.getpayever.com/checkout) t
 OroCommerce uses the Composer to manage the module package and the library.
 To start the installation, browse to your project's root directory and run the following commands:
 ```sh
-composer require payever/payever-orocommerce --prefer-dist --update-no-dev
+composer require payever/payever-integration-orocommerce --prefer-dist --update-no-dev
 php bin/console oro:platform:update --force --timeout=0 --skip-translations --skip-download-translations --skip-search-reindexation --env=prod
 rm -rf var/cache/prod
 php bin/console cache:clear --env=prod

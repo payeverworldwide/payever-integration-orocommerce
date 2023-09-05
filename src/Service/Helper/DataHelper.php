@@ -11,7 +11,7 @@ use Oro\Bundle\WebsiteBundle\Manager\WebsiteManager;
 
 class DataHelper
 {
-    private const COMPOSER_PACKAGE_INTEGRATION = 'payever/payever-orocommerce';
+    private const COMPOSER_PACKAGE_INTEGRATION = 'payever/payever-integration-orocommerce';
 
     private const COMPOSER_PACKAGE_CMS = 'oro/commerce';
 
