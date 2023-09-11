@@ -97,7 +97,7 @@ class ServiceProvider
             ? ClientConfiguration::API_MODE_SANDBOX
             : ClientConfiguration::API_MODE_LIVE;
 
-        $clientConfiguration->setChannelSet(ChannelSet::CHANNEL_SHOPWARE)
+        $clientConfiguration->setChannelSet(ChannelSet::CHANNEL_OROCOMMERCE)
             ->setApiMode($apiMode)
             ->setClientId($this->configManager->get('payever_payment.client_id'))
             ->setClientSecret($this->configManager->get('payever_payment.client_secret'))

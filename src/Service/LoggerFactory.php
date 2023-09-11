@@ -25,7 +25,7 @@ class LoggerFactory
     }
 
     /**
-     * @param 100|200|250|300|400|500|550|600 $loggerLevel
+     * @param mixed $loggerLevel 100|200|250|300|400|500|550|600
      */
     public function create(
         string $filePrefix,

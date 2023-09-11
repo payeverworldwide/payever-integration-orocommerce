@@ -11,23 +11,16 @@ use Oro\Bundle\CheckoutBundle\Entity\CheckoutWorkflowState;
 use Oro\Bundle\IntegrationBundle\Entity\Channel as Integration;
 use Oro\Bundle\IntegrationBundle\Entity\Repository\ChannelRepository;
 use Oro\Bundle\IntegrationBundle\Manager\DeleteManager;
-use Oro\Bundle\PaymentBundle\Entity\PaymentMethodConfig;
-use Oro\Bundle\PaymentBundle\Entity\PaymentMethodsConfigsRuleDestination;
 use Oro\Bundle\UserBundle\Entity\User;
 use Oro\Bundle\UserBundle\Entity\Repository\UserRepository;
-use Oro\Bundle\PaymentBundle\Entity\PaymentMethodsConfigsRule;
-use Oro\Bundle\RuleBundle\Entity\Rule;
-use Oro\Bundle\AddressBundle\Entity\Country;
 use Oro\Bundle\LocaleBundle\Entity\LocalizedFallbackValue;
 use Payever\Bundle\PaymentBundle\Integration\PayeverChannelType;
-use Payever\Bundle\PaymentBundle\Integration\PayeverTransport;
 use Payever\Bundle\PaymentBundle\Entity\PayeverSettings as Transport;
 use Payever\Bundle\PaymentBundle\Service\Api\ServiceProvider;
 use Payever\Bundle\PaymentBundle\Service\Helper\DataHelper;
 use Payever\Sdk\Payments\Converter\PaymentOptionConverter;
 use Payever\Sdk\Payments\Http\MessageEntity\ConvertedPaymentOptionEntity;
 use Payever\Sdk\Payments\Http\MessageEntity\ListPaymentOptionsVariantsResultEntity;
-use Payever\Sdk\Payments\Http\ResponseEntity\ListPaymentOptionsWithVariantsResponse;
 use Psr\Log\LoggerInterface;
 
 class PaymentOptionsService
@@ -121,8 +114,6 @@ class PaymentOptionsService
                 ->setConnectors([])
                 ->setEnabled(true)
                 ->setDefaultUserOwner($this->getDefaultUserOwner());
-
-            // @see oro_payment_method_config
 
             $this->entityManager->persist($integration);
             $this->entityManager->flush($integration);

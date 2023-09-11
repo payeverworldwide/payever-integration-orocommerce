@@ -153,8 +153,7 @@ class OrderManager
         $result = [];
         $items = $this->getOrderItems($order);
         foreach ($items as $item) {
-            $qty = $item->getQuantity() - $item->getQtyCancelled() - $item->getQtyRefunded() - $item->getQtyCaptured();
-            $result[$item->getItemReference()] = $qty;
+            $result[$item->getItemReference()] = $item->getCanBeCancelled();
         }
 
         return $result;
@@ -165,8 +164,7 @@ class OrderManager
         $result = [];
         $items = $this->getOrderItems($order);
         foreach ($items as $item) {
-            $qty = $item->getQuantity() - $item->getQtyCancelled() - $item->getQtyCaptured();
-            $result[$item->getItemReference()] = $qty;
+            $result[$item->getItemReference()] = $item->getCanBeCaptured();
         }
 
         return $result;
@@ -177,8 +175,7 @@ class OrderManager
         $result = [];
         $items = $this->getOrderItems($order);
         foreach ($items as $item) {
-            $qty = $item->getQtyCaptured() - $item->getQtyRefunded();
-            $result[$item->getItemReference()] = $qty;
+            $result[$item->getItemReference()] = $item->getCanBeRefunded();
         }
 
         return $result;

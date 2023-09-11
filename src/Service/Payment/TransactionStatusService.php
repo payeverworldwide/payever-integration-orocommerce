@@ -73,7 +73,7 @@ class TransactionStatusService
         // Verify transaction amount
         if (!CompareHelper::areSame((float) $payeverPayment->getTotal(), (float) $paymentTransaction->getAmount())) {
             // @todo Trigger payment cancel/refund
-            $this->logger->warning(
+            $this->logger->critical(
                 sprintf(
                     'Transaction amount %s does not match to payment amount %s. Order: %s.',
                     $payeverPayment->getTotal(),
@@ -105,12 +105,10 @@ class TransactionStatusService
                     ->setActive(false);
 
                 // Mark order items captured
-                $request = [];
-                $orderItems = $this->orderManager->getOrderItems($order);
-                foreach ($orderItems as $orderItem) {
-                    $request[$orderItem->getItemReference()] = $orderItem->getCanBeCaptured();
-                }
-                $this->orderManager->shipOrderItems($order, $request);
+                $this->orderManager->shipOrderItems(
+                    $order,
+                    $this->orderManager->getOrderQtyAvailableForCapture($order)
+                );
 
                 break;
             default:

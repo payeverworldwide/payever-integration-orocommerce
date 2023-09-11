@@ -24,7 +24,6 @@ use Oro\Bundle\EntityBundle\ORM\DoctrineHelper;
 use Oro\Bundle\LocaleBundle\Helper\LocalizationHelper;
 use Oro\Bundle\OrderBundle\Entity\Order;
 use Oro\Bundle\OrderBundle\Entity\OrderAddress;
-use Oro\Bundle\OrderBundle\Entity\OrderLineItem;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Payever\Sdk\Payments\Http\ResponseEntity\RetrievePaymentResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -220,7 +219,7 @@ class PaymentProcessorService
 
         $channelEntity = new ChannelEntity();
         $channelEntity
-            ->setName(ChannelSet::CHANNEL_SHOPWARE)
+            ->setName(ChannelSet::CHANNEL_OROCOMMERCE)
             ->setSource($this->dataHelper->getCmsVersion())
             ->setType(ChannelTypeSet::ECOMMERCE);
 
