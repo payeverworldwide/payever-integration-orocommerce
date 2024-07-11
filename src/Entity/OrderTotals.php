@@ -7,57 +7,51 @@ namespace Payever\Bundle\PaymentBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Table(name="payever_order_totals")
- * @ORM\Entity(repositoryClass="Payever\Bundle\PaymentBundle\Entity\Repository\OrderTotalsRepository")
  *
  * @SuppressWarnings(PHPMD.ShortVariable)
  */
+#[ORM\Entity(repositoryClass: \Payever\Bundle\PaymentBundle\Entity\Repository\OrderTotalsRepository::class)]
+#[ORM\Table(name: 'payever_order_totals')]
 class OrderTotals
 {
     /**
      * Unique identifier field.
      *
      * @var int
-     *
-     * @ORM\Id()
-     * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @ORM\Column(name="id", type="integer", nullable=false)
      */
+    #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'IDENTITY')]
+    #[ORM\Column(name: 'id', type: 'integer', nullable: false)]
     private int $id;
 
     /**
      * @var int
-     *
-     * @ORM\Column(name="order_id", type="integer", nullable=false)
      */
+    #[ORM\Column(name: 'order_id', type: 'integer', nullable: false)]
     private int $orderId;
 
     /**
      * @var float
-     *
-     * @ORM\Column(name="captured_total", type="float", nullable=false)
      */
+    #[ORM\Column(name: 'captured_total', type: 'float', nullable: false)]
     private float $capturedTotal;
 
     /**
      * @var float
-     *
-     * @ORM\Column(name="cancelled_total", type="float", nullable=false)
      */
+    #[ORM\Column(name: 'cancelled_total', type: 'float', nullable: false)]
     private float $cancelledTotal;
 
     /**
      * @var float
-     *
-     * @ORM\Column(name="refunded_total", type="float", nullable=false)
      */
+    #[ORM\Column(name: 'refunded_total', type: 'float', nullable: false)]
     private float $refundedTotal;
 
     /**
      * @var int
-     *
-     * @ORM\Column(name="manual", type="integer", nullable=false)
      */
+    #[ORM\Column(name: 'manual', type: 'integer', nullable: false)]
     private int $manual;
 
     /**

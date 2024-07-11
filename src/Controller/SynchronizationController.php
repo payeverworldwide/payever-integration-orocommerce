@@ -9,14 +9,12 @@ use Payever\Bundle\PaymentBundle\Service\Payment\PaymentOptionsService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class SynchronizationController extends AbstractController
 {
-    /**
-     * @Route("/synchronize", name="payever_payment_synchronize")
-     */
+    #[\Symfony\Component\Routing\Attribute\Route(path: '/synchronize', name: 'payever_payment_synchronize')]
     public function synchronizeAction(
         Request $request,
         TranslatorInterface $translator,
@@ -40,7 +38,7 @@ class SynchronizationController extends AbstractController
                     'error' => true,
                     'message' => $translator->trans('payever.admin.synchronization.error') . ' ' . $exception->getMessage() //phpcs:ignore
                 ],
-                200
+                \Symfony\Component\HttpFoundation\Response::HTTP_OK
             );
         }
 
@@ -49,7 +47,7 @@ class SynchronizationController extends AbstractController
                 'success' => true,
                 'message' => $translator->trans('payever.admin.synchronization.success')
             ],
-            200
+            \Symfony\Component\HttpFoundation\Response::HTTP_OK
         );
     }
 

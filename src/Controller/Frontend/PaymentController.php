@@ -9,15 +9,13 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Payever\Bundle\PaymentBundle\Entity\PayeverSettings;
 
 class PaymentController extends AbstractController
 {
-    /**
-     * @Route("/payment", name="payever_payment_payment")
-     * @Template("@PayeverPayment/PaymentPage/view.html.twig")
-     */
+    #[\Symfony\Component\Routing\Attribute\Route(path: '/payment', name: 'payever_payment_payment')]
+    #[Template('@PayeverPayment/PaymentPage/view.html.twig')]
     public function paymentAction(Request $request)
     {
         return [

@@ -13,9 +13,9 @@
         }
     ],
     "require": {
-        "php":">=8.2.0",
+        "php":"~8.3.0",
         "ext-zip": "*",
-        "oro/commerce": "5.1.*",
+        "oro/commerce": "6.0.*",
         "payever/core-sdk-php": "1.1.6",
         "payever/plugins-sdk-php": "1.2.0",
         "payever/payments-sdk-php": "1.2.4",

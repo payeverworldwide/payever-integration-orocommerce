@@ -8,17 +8,16 @@ use Payever\Bundle\PaymentBundle\Service\LogCollector;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class CleanLogsController extends AbstractController
 {
     /**
-     * @Route("/clean_logs", name="payever_payment_clean_logs")
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
+    #[\Symfony\Component\Routing\Attribute\Route(path: '/clean_logs', name: 'payever_payment_clean_logs')]
     public function synchronizeAction(
-        Request $request,
         TranslatorInterface $translator,
         LogCollector $logCollector
     ): JsonResponse {
@@ -29,7 +28,7 @@ class CleanLogsController extends AbstractController
                 'success' => true,
                 'message' => $translator->trans('payever.admin.clean_logs.success')
             ],
-            200
+            \Symfony\Component\HttpFoundation\Response::HTTP_OK
         );
     }
 
