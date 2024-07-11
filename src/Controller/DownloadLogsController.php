@@ -8,16 +8,15 @@ use Payever\Bundle\PaymentBundle\Service\LogCollector;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 class DownloadLogsController extends AbstractController
 {
     /**
-     * @Route("/download_logs", name="payever_payment_download_logs")
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
+    #[\Symfony\Component\Routing\Attribute\Route(path: '/download_logs', name: 'payever_payment_download_logs')]
     public function synchronizeAction(
-        Request $request,
         LogCollector $logCollector
     ): Response {
         $logCollector->collect();
@@ -26,7 +25,7 @@ class DownloadLogsController extends AbstractController
 
         return new Response(
             $contents,
-            200,
+            \Symfony\Component\HttpFoundation\Response::HTTP_OK,
             [
                 'Content-Description' => 'File Transfer',
                 'Content-Type' => 'application/octet-stream',

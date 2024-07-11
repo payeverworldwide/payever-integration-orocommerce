@@ -12,18 +12,17 @@ use Payever\Bundle\PaymentBundle\Service\Payment\PaymentProcessorService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 class PaymentTransactionController extends AbstractController
 {
     /**
      * Used by widget info.
      * @see Resources/views/PaymentTransaction/widget/info.html.twig
-     *
-     * @Route("/info/{paymentTransactionId}/", name="payever_payment_transaction_info")
-     * @ParamConverter("paymentTransaction", class="OroPaymentBundle:PaymentTransaction", options={"id" = "paymentTransactionId"})
-     * @Template
      */
+    #[\Symfony\Component\Routing\Attribute\Route(path: '/info/{paymentTransactionId}/', name: 'payever_payment_transaction_info')]
+    #[ParamConverter('paymentTransaction', class: 'OroPaymentBundle:PaymentTransaction', options: ['id' => 'paymentTransactionId'])]
+    #[Template]
     public function infoAction(
         PaymentTransaction $paymentTransaction,
         PayeverMethodProvider $payverMethodProvider,

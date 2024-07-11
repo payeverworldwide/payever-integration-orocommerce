@@ -42,9 +42,9 @@ class PaymentCallbackListener
     private RequestStack $request;
 
     /**
-     * @var Session
+     * @var \Symfony\Component\HttpFoundation\RequestStack
      */
-    private Session $session;
+    private \Symfony\Component\HttpFoundation\RequestStack $session;
 
     /**
      * @var LoggerInterface
@@ -57,7 +57,7 @@ class PaymentCallbackListener
         PaymentProcessorService $paymentProcessor,
         NotificationRequestProcessor $notificationRequestProcessor,
         RequestStack $request,
-        Session $session,
+        \Symfony\Component\HttpFoundation\RequestStack $session,
         LoggerInterface $logger
     ) {
         $this->paymentMethodProvider = $paymentMethodProvider;
