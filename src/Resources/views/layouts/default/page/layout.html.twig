@@ -1,0 +1,11 @@
+{% block _finance_express_head_widget %}
+    {% if is_sandbox %}
+        <script src="https://widgets.staging.devpayever.com/finance-express/widget.min.js"></script>
+    {% else %}
+        <script src="https://widgets.payever.org/finance-express/widget.min.js"></script>
+    {% endif %}
+{% endblock %}
+
+{% block _finance_express_body_widget %}
+    {# body widget #}
+{% endblock %}

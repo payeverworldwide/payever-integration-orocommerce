@@ -51,7 +51,14 @@ class RefundPaymentAction implements PaymentActionInterface
         $this->paymentTransactionProvider->savePaymentTransaction($paymentTransaction);
 
         $order = $this->transactionHelper->getOrder($paymentTransaction);
+        if (!$order) {
+            throw new \UnexpectedValueException('Order is not found');
+        }
+
         $paymentId = $this->transactionHelper->getPaymentId($sourceTransaction);
+        if (!$paymentId) {
+            throw new \LogicException('Payment transaction does not have stored payment id.');
+        }
 
         $refundAmount = $this->transactionHelper->getTransactionOption($paymentTransaction, 'refundAmount');
         if ($refundAmount) {
@@ -62,7 +69,7 @@ class RefundPaymentAction implements PaymentActionInterface
 
         try {
             /** @var RefundPaymentResponse $response */
-            $response = $this->refundAction->execute($order, $paymentId, $refundAmount);
+            $response = $this->refundAction->execute($order, $refundAmount);
 
             $paymentTransaction->setReference($paymentId)
                 ->setSuccessful(true)

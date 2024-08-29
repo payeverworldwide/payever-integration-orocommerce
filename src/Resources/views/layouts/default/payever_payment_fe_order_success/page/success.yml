@@ -1,0 +1,20 @@
+layout:
+    actions:
+        - '@setBlockTheme':
+            themes: '@PayeverPayment/layouts/default/payever_payment_fe_order_success/templates/success.html.twig'
+
+        - '@setOption':
+            id: title
+            optionName: params
+            optionValue:
+                 '%step_label%': '=data["translator"].getTrans("oro.checkout.workflow.success.thank_you.label")'
+
+        - '@add':
+            id: payever_success_order
+            parentId: page_content
+            blockType: payever_success_order
+            options:
+                reference: '=data["payever_finance_express_data_layer"].getOrderReference()'
+
+        - '@remove':
+            id: page_title

@@ -1,0 +1,71 @@
+<div style="min-width: 500px">
+    <div data-layout="separate" class="oro-datagrid payever-datagrid-container">
+        <div class="other-scroll-container">
+            <div class="grid-scrollable-container os-host os-host-resize-disabled os-host-scrollbar-horizontal-hidden os-host-scrollbar-vertical-hidden os-host-transition os-theme-dark">
+                <div class="grid-container">
+                    <table class="grid grid-main-container">
+                        <thead class="grid-header">
+                        <tr class="grid-header-row">
+                            <th class="grid-cell grid-header-cell grid-header-cell-id renderable shortenable-label string-cell">
+                                <span class="grid-header-cell__label-container" data-grid-header-cell-label="">
+                                    <span class="grid-header-cell__label" data-grid-header-cell-text="">{{ 'payever.actions.table.identifier'|trans }}</span>
+                                </span>
+                            </th>
+                            <th class="grid-cell grid-header-cell grid-header-cell-website renderable shortenable-label string-cell">
+                                <span class="grid-header-cell__label-container" data-grid-header-cell-label="">
+                                    <span class="grid-header-cell__label" data-grid-header-cell-text="">{{ 'oro.sale.quote.lineitem.product'|trans }}</span>
+                                </span>
+                            </th>
+                            <th class="grid-cell grid-header-cell grid-header-cell-date renderable shortenable-label string-cell">
+                                <span class="grid-header-cell__label-container" data-grid-header-cell-label="">
+                                    <span class="grid-header-cell__label" data-grid-header-cell-text="">{{ 'oro.pricing.productprice.quantity.label'|trans }}</span>
+                                </span>
+                            </th>
+                            <th class="grid-cell grid-header-cell grid-header-cell-order renderable shortenable-label string-cell">
+                                <span class="grid-header-cell__label-container" data-grid-header-cell-label="">
+                                    <span class="grid-header-cell__label" data-grid-header-cell-text="">{{ 'payever.actions.table.shippedQuantity'|trans }}</span>
+                                </span>
+                            </th>
+                            <th class="grid-cell grid-header-cell grid-header-cell-severity renderable shortenable-label string-cell">
+                                <span class="grid-header-cell__label-container" data-grid-header-cell-label="">
+                                    <span class="grid-header-cell__label" data-grid-header-cell-text="">{{'oro.order.orderlineitem.price.label'|trans}}</span>
+                                </span>
+                            </th>
+                            <th class="grid-cell grid-header-cell grid-header-cell-message renderable shortenable-label string-cell">
+                                <span class="grid-header-cell__label-container" data-grid-header-cell-label="">
+                                    <span class="grid-header-cell__label" data-grid-header-cell-text="">{{ 'payever.actions.table.quantityToShip'|trans }}</span>
+                                </span>
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody class="grid-body">
+                        {% for shipItem in form.peShip.orderLines %}
+                            <tr class="grid-row">
+                                <td class="string-cell grid-cell grid-body-cell grid-body-cell-sku">{{ shipItem.itemReference.vars.value }}</td>
+                                <td class="string-cell grid-cell grid-body-cell grid-body-cell-product" >{{ shipItem.name.vars.value }}</td>
+                                <td class="string-cell grid-cell grid-body-cell grid-body-cell-quantity">{{ shipItem.quantity.vars.value }}</td>
+                                <td class="string-cell grid-cell grid-body-cell grid-body-cell-shipped-quantity">{{ shipItem.qtyCaptured.vars.value|oro_format_decimal }}</td>
+                                <td class="string-cell grid-cell grid-body-cell grid-body-cell-price">{{ form.peShip.currencySymbol.vars.value }} {{ shipItem.unitPrice.vars.value|oro_format_decimal }}</td>
+
+                                {% set hide = '' %}
+                                {% if shipItem.qtyCaptured.vars.value >= shipItem.quantity.vars.value %}
+                                    {% set hide = 'd-none' %}
+                                {% endif %}
+                                <td class="string-cell grid-cell grid-body-cell grid-body-cell-quantity-to-ship">
+                                    <div class="{{ hide }}">
+                                        {{ form_widget(shipItem.quantityToCapture) }}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="payever-shipped-info-container">
+        {% import '@OroUI/macros.html.twig' as UI %}
+    </div>
+</div>

@@ -32,5 +32,8 @@ class PayeverPaymentExtension extends Extension
         $loader->load('payment_actions.yml');
         $loader->load('notification_handlers.yml');
         $loader->load('controllers.yml');
+        $loader->load('layout.yml');
+        $loader->load('twig.yml');
+        $loader->load('block_types.yml');
     }
 }

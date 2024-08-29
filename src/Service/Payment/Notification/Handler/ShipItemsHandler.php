@@ -17,7 +17,10 @@ class ShipItemsHandler extends NotificationHandlerAbstract implements HandlerInt
     public function execute(NotificationResultEntity $notificationResultEntity): array
     {
         $orderReference = $notificationResultEntity->getReference();
-        $order = $this->transactionHelper->getOrderByID($orderReference);
+        $order = $this->transactionHelper->getOrderByIdentifier($orderReference);
+        if (!$order) {
+            throw new \UnexpectedValueException('Order is not found');
+        }
 
         $paymentId = $notificationResultEntity->getId();
         $this->logger->info(sprintf(
@@ -84,12 +87,13 @@ class ShipItemsHandler extends NotificationHandlerAbstract implements HandlerInt
             $this->entityManager->flush($total);
         }
 
-        $this->registerCaptureTransaction(
+        $paymentTransaction = $this->transactionBuilder->registerCaptureTransaction(
             $order,
             $paymentId,
             $captureAmount,
             $notificationResultEntity->toArray()
         );
+        $this->logger->info('Transaction has been registered', [$paymentTransaction->getId()]);
 
         $this->logger->info(
             sprintf(

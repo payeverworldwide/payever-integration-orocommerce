@@ -1,0 +1,14 @@
+services:
+  payever.twig.product_detail_extension:
+    class: Payever\Bundle\PaymentBundle\Twig\ProductDetailExtension
+    arguments:
+      - '@oro_platform.twig.service_locator'
+    tags:
+      - { name: twig.extension }
+
+  payever.twig.cart_details_extension:
+    class: Payever\Bundle\PaymentBundle\Twig\CartDetailsExtension
+    arguments:
+      - '@oro_platform.twig.service_locator'
+    tags:
+      - { name: twig.extension }

@@ -9,6 +9,8 @@ use Payever\Bundle\PaymentBundle\Constant\SettingsConstant;
 use Payever\Sdk\Core\ClientConfiguration;
 use Payever\Sdk\Core\Enum\ChannelSet;
 use Payever\Sdk\Payments\PaymentsApiClient;
+use Payever\Sdk\Payments\ThirdPartyPluginsApiClient;
+use Payever\Sdk\Payments\WidgetsApiClient;
 use Psr\Log\LoggerInterface;
 
 class ServiceProvider
@@ -60,6 +62,42 @@ class ServiceProvider
     }
 
     /**
+     * @return ThirdPartyPluginsApiClient
+     */
+    public function getThirdPartyPluginsApiClient(): ThirdPartyPluginsApiClient
+    {
+        return new ThirdPartyPluginsApiClient(
+            $this->getClientConfiguration(),
+            $this->tokenList
+        );
+    }
+
+    /**
+     * @return WidgetsApiClient
+     * @codeCoverageIgnore
+     */
+    public function getPaymentWidgetsApiClient()
+    {
+        return new WidgetsApiClient(
+            $this->getClientConfiguration(),
+            $this->tokenList
+        );
+    }
+
+    /**
+     * Check if access token is valid.
+     *
+     * @return bool
+     */
+    public function isAccessTokenValid(string $accessToken): bool
+    {
+        return $this->getThirdPartyPluginsApiClient()->validateToken(
+            $this->getBusinessUuid(),
+            $accessToken
+        );
+    }
+
+    /**
      * Set API Credentials.
      *
      * @param string $clientId
@@ -101,7 +139,7 @@ class ServiceProvider
             ->setApiMode($apiMode)
             ->setClientId($this->configManager->get('payever_payment.client_id'))
             ->setClientSecret($this->configManager->get('payever_payment.client_secret'))
-            ->setBusinessUuid($this->configManager->get('payever_payment.business_uuid'))
+            ->setBusinessUuid($this->getBusinessUuid())
             ->setLogger($this->logger);
 
         $sandboxUrl = $this->configManager->get('payever_payment.sandbox_url');
@@ -117,5 +155,10 @@ class ServiceProvider
         }
 
         return $clientConfiguration;
+    }
+
+    private function getBusinessUuid(): ?string
+    {
+        return $this->configManager->get('payever_payment.business_uuid');
     }
 }

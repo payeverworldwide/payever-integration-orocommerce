@@ -1,0 +1,23 @@
+layout:
+  actions:
+    - '@setBlockTheme':
+        themes: 'layout.html.twig'
+    - '@add':
+        id: finance_express_head
+        blockType: container
+        parentId: head
+        prepend: true
+        options:
+          visible: =data["payever_finance_express_data_layer"].isVisible()
+          vars:
+            container_id: financial_express_head_1
+            is_sandbox: =data["payever_finance_express_data_layer"].isSandboxMode()
+    - '@add':
+        id: finance_express_body
+        blockType: container
+        parentId: body
+        prepend: true
+        options:
+          visible: =data["payever_finance_express_data_layer"].isVisible()
+          vars:
+            container_id: financial_express_head_1

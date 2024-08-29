@@ -20,6 +20,8 @@ interface PayeverConfigInterface extends PaymentConfigInterface
 
     public function getIsSubmitMethod(): bool;
 
+    public function getIsB2BMethod(): bool;
+
     public function getInstructionText(): string;
 
     public function getThumbnail(): string;

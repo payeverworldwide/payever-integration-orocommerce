@@ -1,0 +1,13 @@
+{% extends '@OroAction/Operation/form.html.twig' %}
+
+{% block widget_content_inner %}
+    <div class="alert alert-info" role="alert">
+        {{ 'payever.order.payment_transaction.invoice.message'|trans() }}
+    </div>
+    {{ parent() }}
+{% endblock %}
+
+{% block form_actions_inner %}
+    <button type="reset" class="btn">{{ 'payever.actions.invoice.button.cancelText'|trans }}</button>
+    <button type="submit" class="btn btn-primary btn-invoice">{{ 'payever.actions.invoice.button.okText'|trans }}</button>
+{% endblock %}

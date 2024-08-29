@@ -1,0 +1,19 @@
+{% block _payever_pending_order_widget %}
+
+  <link rel="stylesheet" href="{{ asset('bundles/payeverpayment/css/pending.css') }}" />
+  <script> var api_order_update_status = '{{ api_order_update_status|raw }}'; </script>
+    <div data-page-component-module="payeverpayment/js/app/components/payever-pending-component">
+
+    </div>
+  <div class="checkout__success">
+        <h2 class="checkout__success__title">{{ 'payever.messages.pending_payment_thankyou'|trans }}</h2>
+        <p>{{ 'payever.messages.pending_payment_process'|trans }}</p>
+        <p>{{ 'payever.messages.pending_payment_update'|trans }}</p>
+
+        <div class="pe-checkout-bootstrap loader-container loader-fixed loader-fade-dark">
+            <div class="loader_48"></div>
+            <br/>
+            <p id="message">{{ 'payever.messages.pending_payment_waiting'|trans }}</p>
+	    </div>  
+    </div>
+{% endblock %}

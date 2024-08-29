@@ -16,6 +16,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * @ORM\Entity(repositoryClass="Payever\Bundle\PaymentBundle\Entity\Repository\PayeverSettingsRepository")
  * @SuppressWarnings(PHPMD.TooManyFields)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class PayeverSettings extends Transport
 {
@@ -33,7 +34,7 @@ class PayeverSettings extends Transport
 
     /**
      * @var string
-     * @ORM\Column(name="payever_description_offer", type="string", nullable=true)
+     * @ORM\Column(name="payever_description_offer", type="string", length=500, nullable=true)
      */
     protected $descriptionOffer;
 
@@ -56,6 +57,12 @@ class PayeverSettings extends Transport
     protected $isSubmitMethod = false;
 
     /**
+     * @var bool
+     * @ORM\Column(name="payever_is_b2b_method", type="boolean", options={"default"=false})
+     */
+    protected $isB2BMethod = false;
+
+    /**
      * @var string
      * @ORM\Column(name="payever_instruction_text", type="string", nullable=true)
      */
@@ -69,13 +76,13 @@ class PayeverSettings extends Transport
 
     /**
      * @var string
-     * @ORM\Column(name="payever_currencies", type="string", nullable=true)
+     * @ORM\Column(name="payever_currencies", type="string", length=4000, nullable=true)
      */
     protected $currencies;
 
     /**
      * @var string
-     * @ORM\Column(name="payever_countries", type="string", nullable=true)
+     * @ORM\Column(name="payever_countries", type="string", length=4000, nullable=true)
      */
     protected $countries;
 
@@ -355,6 +362,18 @@ class PayeverSettings extends Transport
         return $this;
     }
 
+    public function getIsB2BMethod(): bool
+    {
+        return $this->isB2BMethod;
+    }
+
+    public function setIsB2BMethod(bool $isB2BMethod): self
+    {
+        $this->isB2BMethod = $isB2BMethod;
+
+        return $this;
+    }
+
     public function getInstructionText(): ?string
     {
         return $this->instructionText;
@@ -513,6 +532,7 @@ class PayeverSettings extends Transport
                     PayeverConfig::DESCRIPTION_FEE => $this->getDescriptionFee(),
                     PayeverConfig::IS_REDIRECT_METHOD => $this->getIsRedirectMethod(),
                     PayeverConfig::IS_SUBMIT_METHOD => $this->getIsSubmitMethod(),
+                    PayeverConfig::IS_B2B_METHOD => $this->getIsB2BMethod(),
                     PayeverConfig::INSTRUCTION_TEXT => $this->getInstructionText(),
                     PayeverConfig::THUMBNAIL => $this->getThumbnail(),
                     PayeverConfig::ALLOWED_CURRENCIES => $this->getCurrencies(),

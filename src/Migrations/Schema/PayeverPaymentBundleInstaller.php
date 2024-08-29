@@ -14,15 +14,16 @@ use Oro\Bundle\MigrationBundle\Migration\QueryBag;
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class PayeverPaymentBundleInstaller implements Installation
 {
     /**
      * {@inheritdoc}
      */
-    public function getMigrationVersion()
+    public function getMigrationVersion(): string
     {
-        return 'v1_0';
+        return 'v1_2';
     }
 
     /**
@@ -34,6 +35,7 @@ class PayeverPaymentBundleInstaller implements Installation
         $this->alterOroIntegrationTransportTable($schema);
         $this->createPayeverShortLabelTable($schema);
         $this->createPayeverTransLabelTable($schema);
+        $this->createPayeverPaymentActionsTable($schema);
 
         /** Foreign keys generation */
         $this->addPayeverShortLabelForeignKeys($schema);
@@ -84,6 +86,7 @@ class PayeverPaymentBundleInstaller implements Installation
                 ]
             );
         }
+        $table->changeColumn('payever_description_offer', ['length' => 500]);
 
         if (!$table->hasColumn('payever_description_fee')) {
             $table->addColumn(
@@ -109,6 +112,17 @@ class PayeverPaymentBundleInstaller implements Installation
         if (!$table->hasColumn('payever_is_submit_method')) {
             $table->addColumn(
                 'payever_is_submit_method',
+                'boolean',
+                [
+                    'default' => '0',
+                    'notnull' => false
+                ]
+            );
+        }
+
+        if (!$table->hasColumn('payever_is_b2b_method')) {
+            $table->addColumn(
+                'payever_is_b2b_method',
                 'boolean',
                 [
                     'default' => '0',
@@ -147,6 +161,7 @@ class PayeverPaymentBundleInstaller implements Installation
                 ]
             );
         }
+        $table->changeColumn('payever_currencies', ['length' => 4000]);
 
         if (!$table->hasColumn('payever_countries')) {
             $table->addColumn(
@@ -157,6 +172,7 @@ class PayeverPaymentBundleInstaller implements Installation
                 ]
             );
         }
+        $table->changeColumn('payever_countries', ['length' => 4000]);
 
         if (!$table->hasColumn('payever_is_shipping_address_allowed')) {
             $table->addColumn(
@@ -248,30 +264,128 @@ class PayeverPaymentBundleInstaller implements Installation
      * Create `payever_short_label` table
      *
      * @param Schema $schema
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     protected function createPayeverShortLabelTable(Schema $schema): void
     {
-        $table = $schema->createTable('payever_short_label');
-        $table->addColumn('transport_id', 'integer', []);
-        $table->addColumn('localized_value_id', 'integer', []);
-        $table->setPrimaryKey(['transport_id', 'localized_value_id']);
-        $table->addIndex(['transport_id'], 'oro_payment_payever_short_label_transport_id', []);
-        $table->addUniqueIndex(['localized_value_id'], 'oro_payment_payever_short_label_localized_value_id', []); //phpcs:ignore
+        if ($schema->hasTable('payever_short_label')) {
+            $table = $schema->getTable('payever_short_label');
+        } else {
+            $table = $schema->createTable('payever_short_label');
+        }
+        if (!$table->hasColumn('transport_id')) {
+            $table->addColumn('transport_id', 'integer', []);
+        }
+        if (!$table->hasColumn('localized_value_id')) {
+            $table->addColumn('localized_value_id', 'integer', []);
+            $table->setPrimaryKey(['transport_id', 'localized_value_id']);
+            $table->addIndex(['transport_id'], 'oro_payment_payever_short_label_transport_id', []);
+            $table->addUniqueIndex(['localized_value_id'], 'oro_payment_payever_short_label_localized_value_id', []); //phpcs:ignore
+        }
     }
 
     /**
      * Create `payever_trans_label` table
      *
      * @param Schema $schema
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     protected function createPayeverTransLabelTable(Schema $schema): void
     {
-        $table = $schema->createTable('payever_trans_label');
-        $table->addColumn('transport_id', 'integer', []);
-        $table->addColumn('localized_value_id', 'integer', []);
-        $table->setPrimaryKey(['transport_id', 'localized_value_id']);
-        $table->addIndex(['transport_id'], 'oro_payment_payever_trans_label_transport_id', []);
-        $table->addUniqueIndex(['localized_value_id'], 'oro_payment_payever_trans_label_localized_value_id', []); //phpcs:ignore
+        if ($schema->hasTable('payever_trans_label')) {
+            $table = $schema->getTable('payever_trans_label');
+        } else {
+            $table = $schema->createTable('payever_trans_label');
+        }
+
+        if (!$table->hasColumn('transport_id')) {
+            $table->addColumn('transport_id', 'integer', []);
+        }
+        if (!$table->hasColumn('localized_value_id')) {
+            $table->addColumn('localized_value_id', 'integer', []);
+            $table->setPrimaryKey(['transport_id', 'localized_value_id']);
+            $table->addIndex(['transport_id'], 'oro_payment_payever_trans_label_transport_id', []);
+            $table->addUniqueIndex(['localized_value_id'], 'oro_payment_payever_trans_label_localized_value_id', []); //phpcs:ignore
+        }
+    }
+
+    /**
+     * Create `payever_payment_actions` table
+     *
+     * @param Schema $schema
+     * @SuppressWarnings(PHPMD.ElseExpression)
+     */
+    protected function createPayeverPaymentActionsTable(Schema $schema): void
+    {
+        if ($schema->hasTable('payever_payment_actions')) {
+            $table = $schema->getTable('payever_payment_actions');
+        } else {
+            $table = $schema->createTable('payever_payment_actions');
+        }
+
+        if (!$table->hasColumn('id')) {
+            $table->addColumn(
+                'id',
+                'integer',
+                ['autoincrement' => true]
+            );
+            $table->setPrimaryKey(['id']);
+        }
+
+        if (!$table->hasColumn('identifier')) {
+            $table->addColumn(
+                'identifier',
+                'string',
+                ['notnull' => true, 'length' => 255]
+            );
+            $table->addUniqueIndex(['identifier'], 'IDX_6D1262519EB1F1F1', []);
+        }
+
+        if (!$table->hasColumn('order_id')) {
+            $table->addColumn(
+                'order_id',
+                'integer',
+                ['notnull' => true]
+            );
+            $table->addIndex(['order_id'], 'IDX_2D261519EB185F9', []);
+        }
+
+        if (!$table->hasColumn('type')) {
+            $table->addColumn(
+                'type',
+                'string',
+                ['notnull' => false, 'length' => 64]
+            );
+        }
+
+        if (!$table->hasColumn('source')) {
+            $table->addColumn(
+                'source',
+                'string',
+                ['notnull' => false, 'length' => 64]
+            );
+        }
+
+        if (!$table->hasColumn('amount')) {
+            $table->addColumn(
+                'amount',
+                'money',
+                [
+                    'notnull' => false,
+                    'precision' => 2,
+                    'scale' => 4,
+                    'comment' => '(DC2Type:money)',
+                ]
+            );
+        }
+
+        if (!$table->hasColumn('created_at')) {
+            $table->addColumn('created_at', 'datetime', ['comment' => '(DC2Type:datetime)']);
+        }
+
+        if (!$table->hasColumn('updated_at')) {
+            $table->addColumn('updated_at', 'datetime', ['comment' => '(DC2Type:datetime)']);
+        }
     }
 
     /**
@@ -322,10 +436,15 @@ class PayeverPaymentBundleInstaller implements Installation
      * Create `payever_order_items` table
      *
      * @param Schema $schema
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     protected function createPayeverOrderItemsTable(Schema $schema): void
     {
-        $table = $schema->createTable('payever_order_items');
+        if ($schema->hasTable('payever_order_items')) {
+            $table = $schema->getTable('payever_order_items');
+        } else {
+            $table = $schema->createTable('payever_order_items');
+        }
 
         if (!$table->hasColumn('id')) {
             $table->addColumn(
@@ -333,6 +452,7 @@ class PayeverPaymentBundleInstaller implements Installation
                 'integer',
                 ['autoincrement' => true]
             );
+            $table->setPrimaryKey(['id']);
         }
 
         if (!$table->hasColumn('order_id')) {
@@ -341,6 +461,7 @@ class PayeverPaymentBundleInstaller implements Installation
                 'integer',
                 ['notnull' => true]
             );
+            $table->addIndex(['order_id'], 'IDX_1D161518EB185F8', []);
         }
 
         if (!$table->hasColumn('item_type')) {
@@ -433,19 +554,21 @@ class PayeverPaymentBundleInstaller implements Installation
                 ]
             );
         }
-
-        $table->setPrimaryKey(['id']);
-        $table->addIndex(['order_id'], 'IDX_1D161518EB185F8', []);
     }
 
     /**
      * Create `payever_order_totals` table
      *
      * @param Schema $schema
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     protected function createPayeverOrderTotalsTable(Schema $schema): void
     {
-        $table = $schema->createTable('payever_order_totals');
+        if ($schema->hasTable('payever_order_totals')) {
+            $table = $schema->getTable('payever_order_totals');
+        } else {
+            $table = $schema->createTable('payever_order_totals');
+        }
 
         if (!$table->hasColumn('id')) {
             $table->addColumn(
@@ -453,6 +576,7 @@ class PayeverPaymentBundleInstaller implements Installation
                 'integer',
                 ['autoincrement' => true]
             );
+            $table->setPrimaryKey(['id']);
         }
 
         if (!$table->hasColumn('order_id')) {
@@ -461,6 +585,7 @@ class PayeverPaymentBundleInstaller implements Installation
                 'integer',
                 ['notnull' => true]
             );
+            $table->addIndex(['order_id'], 'IDX_1E161518EB185E8', []);
         }
 
         if (!$table->hasColumn('captured_total')) {
@@ -502,6 +627,34 @@ class PayeverPaymentBundleInstaller implements Installation
             );
         }
 
+        if (!$table->hasColumn('settled_total')) {
+            $table->addColumn(
+                'settled_total',
+                'money',
+                [
+                    'notnull' => false,
+                    'precision' => 2,
+                    'scale' => 4,
+                    'default' => 0,
+                    'comment' => '(DC2Type:money)',
+                ]
+            );
+        }
+
+        if (!$table->hasColumn('invoiced_total')) {
+            $table->addColumn(
+                'invoiced_total',
+                'money',
+                [
+                    'notnull' => false,
+                    'precision' => 2,
+                    'scale' => 4,
+                    'default' => 0,
+                    'comment' => '(DC2Type:money)',
+                ]
+            );
+        }
+
         if (!$table->hasColumn('manual')) {
             $table->addColumn(
                 'manual',
@@ -511,8 +664,5 @@ class PayeverPaymentBundleInstaller implements Installation
                 ]
             );
         }
-
-        $table->setPrimaryKey(['id']);
-        $table->addIndex(['order_id'], 'IDX_1E161518EB185E8', []);
     }
 }

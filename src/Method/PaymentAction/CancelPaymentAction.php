@@ -57,7 +57,14 @@ class CancelPaymentAction implements PaymentActionInterface
         $this->paymentTransactionProvider->savePaymentTransaction($paymentTransaction);
 
         $order = $this->transactionHelper->getOrder($paymentTransaction);
+        if (!$order) {
+            throw new \UnexpectedValueException('Order is not found');
+        }
+
         $paymentId = $this->transactionHelper->getPaymentId($sourceTransaction);
+        if (!$paymentId) {
+            throw new \LogicException('Payment transaction does not have stored payment id.');
+        }
 
         $cancelAmount = $this->transactionHelper->getTransactionOption($paymentTransaction, 'cancelAmount');
         if ($cancelAmount) {
@@ -68,7 +75,7 @@ class CancelPaymentAction implements PaymentActionInterface
 
         try {
             /** @var CancelPaymentResponse $response */
-            $response = $this->cancelAction->execute($order, $paymentId, $cancelAmount);
+            $response = $this->cancelAction->execute($order, $cancelAmount);
 
             $paymentTransaction->setReference($paymentId)
                 ->setSuccessful(true)

@@ -88,7 +88,6 @@ class UrlHelper
         );
     }
 
-
     /**
      * @param string $returnUrl
      * @return string

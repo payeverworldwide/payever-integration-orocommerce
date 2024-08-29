@@ -40,6 +40,54 @@ services:
   Payever\Bundle\PaymentBundle\Controller\Frontend\PaymentController:
     calls:
       - [setContainer, ['@Psr\Container\ContainerInterface']]
+      - [setServiceProvider, ['@payever.service.api.service_provider']]
     tags:
       - { name: container.service_subscriber }
       - { name: container.service_subscriber, id: payever.service.logger, key: Psr\Log\LoggerInterface }
+
+  Payever\Bundle\PaymentBundle\Controller\Frontend\FinanceExpressController:
+    calls:
+      - [ setContainer, [ '@Psr\Container\ContainerInterface' ] ]
+    tags:
+      - { name: container.service_subscriber }
+      - { name: container.service_subscriber, id: payever.service.logger, key: Psr\Log\LoggerInterface }
+      - { name: container.service_subscriber, id: payever.service.payment.finance_express, key: Payever\Bundle\PaymentBundle\Service\Payment\FinanceExpressService }
+      - { name: container.service_subscriber, id: payever.service.shipping.shipping_calc, key: Payever\Bundle\PaymentBundle\Service\Shipping\ShippingCalcService }
+      - { name: container.service_subscriber, id: payever.service.helper.payment_method, key: Payever\Bundle\PaymentBundle\Service\Helper\PaymentMethodHelper }
+      - { name: container.service_subscriber, id: payever.service.helper.product, key: Payever\Bundle\PaymentBundle\Service\Helper\ProductHelper }
+      - { name: controller.service_arguments }
+
+  Payever\Bundle\PaymentBundle\Controller\FinanceExpressConfigController:
+    calls:
+      - [ setContainer, [ '@Psr\Container\ContainerInterface' ] ]
+    tags:
+      - { name: container.service_subscriber }
+      - { name: container.service_subscriber, id: Symfony\Contracts\Translation\TranslatorInterface }
+      - { name: container.service_subscriber, id: Payever\Bundle\PaymentBundle\Service\FinanceExpressConfig }
+      - { name: controller.service_arguments }
+
+  Payever\Bundle\PaymentBundle\Controller\Frontend\LogController:
+    calls:
+      - [ setContainer, [ '@Psr\Container\ContainerInterface' ] ]
+    tags:
+      - { name: container.service_subscriber }
+      - { name: container.service_subscriber, id: Payever\Bundle\PaymentBundle\Service\Api\ServiceProvider }
+      - { name: container.service_subscriber, id: Payever\Bundle\PaymentBundle\Service\LogCollector }
+      - { name: controller.service_arguments }
+
+  Payever\Bundle\PaymentBundle\Controller\Frontend\CompanyController:
+    calls:
+      - [setContainer, ['@Psr\Container\ContainerInterface']]
+    tags:
+      - { name: container.service_subscriber }
+      - { name: container.service_subscriber, id: payever.service.company_search, key: Payever\Bundle\PaymentBundle\Service\Company\SearchService }
+      - { name: container.service_subscriber, id: payever.service.logger, key: Psr\Log\LoggerInterface }
+
+  Payever\Bundle\PaymentBundle\Controller\Frontend\ClaimController:
+    calls:
+      - [setContainer, ['@Psr\Container\ContainerInterface']]
+    tags:
+      - { name: container.service_subscriber }
+      - { name: container.service_subscriber, id: payever.service.payment_invoice, key: Payever\Bundle\PaymentBundle\Service\Payment\InvoiceService }
+      - { name: container.service_subscriber, id: payever.service.helper.auth, key: Payever\Bundle\PaymentBundle\Service\Helper\AuthHelper }
+      - { name: controller.service_arguments }

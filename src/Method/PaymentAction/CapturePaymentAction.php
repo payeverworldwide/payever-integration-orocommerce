@@ -52,7 +52,14 @@ class CapturePaymentAction implements PaymentActionInterface
         $this->paymentTransactionProvider->savePaymentTransaction($paymentTransaction);
 
         $order = $this->transactionHelper->getOrder($paymentTransaction);
+        if (!$order) {
+            throw new \UnexpectedValueException('Order is not found');
+        }
+
         $paymentId = $this->transactionHelper->getPaymentId($sourceTransaction);
+        if (!$paymentId) {
+            throw new \LogicException('Payment transaction does not have stored payment id.');
+        }
 
         $captureAmount = $this->transactionHelper->getTransactionOption($paymentTransaction, 'captureAmount');
         if ($captureAmount) {
@@ -63,7 +70,7 @@ class CapturePaymentAction implements PaymentActionInterface
 
         try {
             /** @var ShippingGoodsPaymentResponse $response */
-            $response = $this->shippingAction->execute($order, $paymentId, $captureAmount);
+            $response = $this->shippingAction->execute($order, $captureAmount);
 
             $paymentTransaction->setReference($paymentId)
                 ->setSuccessful(true)

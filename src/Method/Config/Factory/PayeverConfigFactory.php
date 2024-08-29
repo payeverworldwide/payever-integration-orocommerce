@@ -54,6 +54,7 @@ class PayeverConfigFactory implements PayeverConfigFactoryInterface
         $params[PayeverConfig::DESCRIPTION_FEE] = $settings->getDescriptionFee();
         $params[PayeverConfig::IS_REDIRECT_METHOD] = $settings->getIsRedirectMethod();
         $params[PayeverConfig::IS_SUBMIT_METHOD] = $settings->getIsSubmitMethod();
+        $params[PayeverConfig::IS_B2B_METHOD] = $settings->getIsB2BMethod();
         $params[PayeverConfig::INSTRUCTION_TEXT] = $settings->getInstructionText();
         $params[PayeverConfig::THUMBNAIL] = $settings->getThumbnail();
         $params[PayeverConfig::ALLOWED_CURRENCIES] = $settings->getCurrencies();

@@ -5,46 +5,39 @@ declare(strict_types=1);
 namespace Payever\Bundle\PaymentBundle\Service\Payment\Action;
 
 use Oro\Bundle\OrderBundle\Entity\Order;
-use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
-use Payever\Bundle\PaymentBundle\Service\Api\ServiceProvider;
-use Payever\Bundle\PaymentBundle\Service\Management\OrderManager;
 use Payever\Bundle\PaymentBundle\Service\Helper\CompareHelper;
-use Payever\Sdk\Payments\PaymentsApiClient;
-use Payever\Sdk\Core\Base\ResponseInterface;
+use Payever\Bundle\PaymentBundle\Service\Helper\OrderItemHelper;
+use Payever\Bundle\PaymentBundle\Service\Management\PaymentActionManager;
+use Payever\Sdk\Payments\Http\RequestEntity\PaymentItemEntity;
 use Payever\Sdk\Payments\Http\ResponseEntity\CancelPaymentResponse;
-use Psr\Log\LoggerInterface;
 
-class CancelAction implements ActionInterface
+class CancelAction extends ActionAbstract implements ActionInterface
 {
-    private ServiceProvider $serviceProvider;
-
-    private OrderManager $orderManager;
-
-    /**
-     * @var LoggerInterface
-     */
-    private LoggerInterface $logger;
-
-    public function __construct(
-        ServiceProvider $serviceProvider,
-        OrderManager $orderManager,
-        LoggerInterface $logger
-    ) {
-        $this->serviceProvider = $serviceProvider;
-        $this->orderManager = $orderManager;
-        $this->logger = $logger;
-    }
-
-    public function execute(Order $order, string $paymentId, $amount = null): CancelPaymentResponse
+    public function execute(Order $order, ?float $amount): CancelPaymentResponse
     {
+        $paymentId = $this->orderHelper->getPaymentId($order);
+        if (!$paymentId) {
+            throw new \LogicException('Payment transaction does not have stored payment id.');
+        }
+
         if ($amount) {
-            $amount = floatval($amount);
             $amount = round($amount, 2);
         }
 
+        $paymentAction = $this->paymentActionManager->addAction(
+            $order,
+            PaymentActionManager::ACTION_CANCEL,
+            PaymentActionManager::SOURCE_EXTERNAL,
+            (float) $amount
+        );
+
         try {
             /** @var CancelPaymentResponse $result */
-            $result = $this->getPaymentApiClient()->cancelPaymentRequest($paymentId, $amount);
+            $result = $this->getPaymentApiClient()->cancelPaymentRequest(
+                $paymentId,
+                $amount,
+                $paymentAction->getIdentifier()
+            );
         } catch (\Exception $exception) {
             $this->logger->critical('Cancel action error: ' . $exception->getMessage());
 
@@ -61,6 +54,8 @@ class CancelAction implements ActionInterface
 
         /** @var CancelPaymentResponse $response */
         $response = $result->getResponseEntity();
+        $this->logger->debug('Cancel amount action response', $response->toArray());
+
         if (!$amount || CompareHelper::areSame((float) $order->getTotal(), (float) $amount)) {
             $this->orderManager->cancelOrderItems(
                 $order,
@@ -76,11 +71,62 @@ class CancelAction implements ActionInterface
         return $response;
     }
 
-    /**
-     * @return PaymentsApiClient
-     */
-    private function getPaymentApiClient(): PaymentsApiClient
+    public function executeItems(Order $order, array $items): CancelPaymentResponse
     {
-        return $this->serviceProvider->getPaymentsApiClient();
+        $paymentId = $this->orderHelper->getPaymentId($order);
+        if (!$paymentId) {
+            throw new \LogicException('Payment transaction does not have stored payment id.');
+        }
+
+        $deliveryFee = 0;
+        $paymentItems = [];
+        foreach ($items as $itemReference => $qty) {
+            $orderItem = $this->orderManager->getOrderItem($order, $itemReference);
+            if (!$orderItem) {
+                $this->logger->critical(sprintf('Order item %s does not exists.', $itemReference));
+
+                continue;
+            }
+
+            if ($orderItem->getItemType() === OrderItemHelper::TYPE_SHIPPING) {
+                $deliveryFee = $qty > 0 ? $orderItem->getUnitPrice() : 0;
+
+                continue;
+            }
+
+            $paymentEntity = new PaymentItemEntity();
+            $paymentEntity->setIdentifier($orderItem->getItemReference())
+                ->setName($orderItem->getName())
+                ->setPrice(round((float) $orderItem->getUnitPrice(), 2))
+                ->setQuantity($qty);
+
+            $paymentItems[] = $paymentEntity;
+        }
+
+        $paymentAction = $this->paymentActionManager->addAction(
+            $order,
+            PaymentActionManager::ACTION_CANCEL,
+            PaymentActionManager::SOURCE_EXTERNAL,
+            0
+        );
+
+        $result = $this->getPaymentApiClient()->cancelItemsPaymentRequest(
+            $paymentId,
+            $paymentItems,
+            $deliveryFee,
+            $paymentAction->getIdentifier()
+        );
+
+        /** @var CancelPaymentResponse $response */
+        $response = $result->getResponseEntity();
+        $this->logger->debug('Cancel items response', $response->toArray());
+
+        // Mark order items cancelled
+        $this->orderManager->cancelOrderItems(
+            $order,
+            $items
+        );
+
+        return $response;
     }
 }

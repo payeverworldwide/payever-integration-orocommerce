@@ -9,3 +9,36 @@ payeverpayment_frontend:
   prefix: /payever_payments
   options:
     frontend: true
+
+payeverpayment_finance_express:
+  resource: "@PayeverPaymentBundle/Controller/Frontend/FinanceExpressController.php"
+  type: annotation
+  prefix: /finance-express
+  options:
+    frontend: true
+
+payeverpayment_log:
+  resource: "@PayeverPaymentBundle/Controller/Frontend/LogController.php"
+  type: annotation
+  prefix: /payever_logs
+  options:
+    frontend: true
+
+payeverpayment_finance_express_config:
+  resource: "@PayeverPaymentBundle/Controller/FinanceExpressConfigController.php"
+  type: annotation
+  prefix: /finance-express-config
+
+payeverpayment_company:
+  resource: "@PayeverPaymentBundle/Controller/Frontend/CompanyController.php"
+  type: annotation
+  prefix: /payever_company
+  options:
+    frontend: true
+
+payeverpayment_claim:
+  resource: "@PayeverPaymentBundle/Controller/Frontend/ClaimController.php"
+  type: annotation
+  prefix: /payever_claim
+  options:
+    frontend: true

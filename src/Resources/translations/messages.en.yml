@@ -1,6 +1,6 @@
 payever:
   channel_type:
-    label: Payever
+    label: payever
   admin:
     synchronization:
       button:
@@ -14,11 +14,16 @@ payever:
       button:
         label: Clean logs
       success: Logs have been cleaned.
+    fe_widgets:
+      invalid_credentials: Please check api credentials.
+      widgets_missing: No any available widget.
   configuration:
-    payever_settings: Payever Settings
+    payever_settings: payever Settings
     payment_settings: Payment Settings
     payment_methods_synchronization: Payment Methods Synchronization
     payever_utilities: Utilities
+    payver_b2b_settings: B2B Settings
+    finance_express: Finance Express Widget
   system_configuration:
     fields:
       client_id:
@@ -36,6 +41,12 @@ payever:
         choices:
           live: Live
           sandbox: Sandbox
+      api_version:
+        label: API Version
+        tooltip: API Version.
+        choices:
+          2: v2
+          3: v3
       log_level:
         label: Logging level
         tooltip: Logging level.
@@ -46,8 +57,87 @@ payever:
       is_redirect:
         label: Redirect to payever
         tooltip: Check to get redirected to payever on a new page or leave blank to use an iframe.
+      enable_apm:
+        label: Send logs via APM
+        tooltip: Send logs via APM.
       synchronize_button:
         label: Synchronize payment methods
+      fe_widget_id:
+        label: Widget ID
+        tooltip: Widget ID key.
+      fe_widget_theme:
+          label: Widget Theme
+          tooltip: only for wallet payments.
+          choices:
+            light: Light
+            dark: Dark
+      fe_product:
+        label: Enable on the product single page
+        tooltip: Enable payever express widget on product single page
+      fe_cart:
+        label: Enable on the shopping cart page
+        tooltip: Enable payever express widget on cart
+      fe_configuration:
+        choices:
+          dropdownCalculator: Calculator
+          twoFieldsCalculator: Two Field Calculator
+          button: Button
+          text: Text
+          apple_pay: Apple Pay
+          cash: Prepayment
+          google_pay: Google Pay
+          instant_payment: Instant Payment
+          ivy: Ivy
+          paypal: PayPal
+          santander_factoring_de: Santander Splitpay Germany
+          santander_installment: Santander Installments Germany
+          santander_installment_at: Santander Installments Austria
+          santander_installment_dk: Santander Installments Denmark
+          santander_installment_fi: Santander Installments Finland
+          santander_installment_nl: Santander Installments Netherlands
+          santander_installment_no: Santander Installments Norway
+          santander_installment_se: Santander Installments Sweden
+          santander_installment_uk: Santander Installments United Kingdom
+          santander_invoice_de: Santander Invoice Germany
+          santander_invoice_no: Santander Invoice Norway
+          santander_pos_factoring_de: POS Santander Splitpay
+          santander_pos_installment: POS Santander Installments
+          santander_pos_installment_at: POS Santander Installments Austria
+          santander_pos_installment_dk: POS Santander Installments Denmark
+          santander_pos_installment_no: POS Santander Installments Norway
+          santander_pos_installment_se: POS Santander Installments Sweden
+          santander_pos_installment_uk: POS Santander Installments United Kingdom
+          santander_pos_invoice_de: POS Santander Invoice Germany
+          santander_pos_invoice_no: POS Santander Invoice Norway
+          sofort: SOFORT Banking
+          stripe: Stripe Credit Card
+          stripe_directdebit: Stripe Direct Debit
+          swedbank_creditcard: Swedbank Cards
+          swedbank_invoice: Swedbank Invoice
+          zinia_bnpl: Zinia BNPL Netherlands
+          zinia_bnpl_de: Zinia BNPL Germany
+          zinia_installmen: Zinia Installments Netherlands
+          zinia_installment_de: Zinia Installments Germany
+          zinia_pos: POS Zinia BNPL Netherlands
+          zinia_pos_de: POS Zinia BNPL Germany
+          zinia_slice_three: Zinia Slice In Three Netherlands
+          zinia_slice_three_de: Zinia Slice In Three Germany
+      b2b_company_search:
+        label: Enable Company Search
+        tooltip: Enable Company Search widget on the checkout page
+      b2b_company_credit_line:
+        label: Enable credit line
+        tooltip: Enable credit line check when your client is redirected to the billing step (paid feature)
+      b2b_countries:
+        label: Countries
+        tooltip: List of countries that available on the country selector
+      b2b_company_search_type:
+        label: Company Search Type
+        tooltip: Company Search Type
+        choices:
+          dropdown: Dropdown
+          popup: Popup
+          mixed: Mixed
   settings:
     labels:
       label: Labels
@@ -108,11 +198,20 @@ payever:
   errors:
     payment_cancelled: Payment has been cancelled
     payment_failed: Payment has been failed
+    payment_cancelled_v2: The payment was cancelled. Please try again or choose another payment option.
+    payment_failed_v2: The payment has failed. Please choose another payment option, or try again later.
+    payment_declined: Unfortunately the payment was declined, please choose another payment option.
+
   messages:
-    pending_payment: Please note that since your payment is not yet final, we will put your order on hold until we have received confirmation from the bank.
+    pending_payment_thankyou: Thank you! Your order has been received.
+    pending_payment_process: We will send the order once your loan application has been processed and we have received confirmation from Consumer Bank.
+    pending_payment_update: You will receive a response to your loan application via email or SMS and an order confirmation from us when your order is on its way.
+    pending_payment_waiting: Waiting for an update. It might take several minutes...
+    cancelled_payment: Payment has been cancelled.
+    failed_payment: Payment has been refused.
   order:
     action:
-      payment_information.label: Payever Information
+      payment_information.label: payever Information
     payment_transaction:
       cancel:
         message: Payment will be cancelled
@@ -120,8 +219,12 @@ payever:
         message: Payment will be captured
       refund:
         message: Payment will be refunded
+      settle:
+        message: Payment will be settled
+      invoice:
+        message: Payment will be invoiced
   fields:
-    payever_id: Payever ID
+    payever_id: payever ID
     status: Status
     total: Total
     specific_status: Specific status
@@ -134,7 +237,94 @@ payever:
     localized_range:
       min_message: "Minimum value: {min}"
       max_message: "Maximum value: {max}"
+  actions:
+    btn:
+      cancel:
+        label: payever Cancel
+      ship:
+        label: payever Ship
+      refund:
+        label: payever Refund
+      settle:
+        label: payever Settle
+      claim:
+        label: payever Claim
+      claim_upload:
+        label: payever Claim Upload
+      invoice:
+        label: Payever Invoice
+      invoice_pdf:
+        label: Create Invoice Document
+    modal:
+      total: Total
+      cancelled: Cancelled
+      captured: Captured
+      refunded: Refunded
+      refund_hint: You can refund payment here.
+      cancel_hint: You can cancel payment here.
+      capture_hint: You can capture payment here.
+      claim_hint: You can claim payment here.
+      claim_upload_hint: You can claim upload payment here.
+    table:
+      identifier: Identifier
+      refundedQuantity: Refunded Quantity
+      cancelledQuantity: Cancelled Quantity
+      shippedQuantity: Shipped Quantity
+      quantityToRefund: Quantity to refund
+      quantityToCancel: Quantity to cancel
+      quantityToShip: Quantity to ship
+    refund:
+      label: Refund
+      successMessage: 'Payment has been successfully refunded'
+      errorMessage: 'Payment cannot be refunded. Error: {error}'
+    cancel:
+      label: Cancel
+      successMessage: 'Payment has been successfully cancelled'
+      errorMessage: 'Payment cannot be cancelled. Error: {error}'
+    ship:
+      label: Ship
+      successMessage: 'Payment has been successfully captured'
+      errorMessage: 'Payment cannot be captured. Error: {error}'
+      trackingNumber: Tracking Number
+      trackingUrl: Tracking Url
+      shippingDate: Shipping Date
+    settle:
+      label: Settle
+      successMessage: 'Payment has been successfully settled'
+      errorMessage: 'Payment cannot be settled. Error: {error}'
+      button:
+        okText: Settle
+        cancelText: Back
+    claim:
+      label: Claim
+      successMessage: 'Payment has been successfully claimed'
+      errorMessage: 'Payment cannot be claimed. Error: {error}'
+      isDisputed: Is invoice disputed
+    claim_upload:
+      label: Claim Upload
+      successMessage: 'Claim upload has been processed successfully'
+      errorMessage: "Claim upload hasn't been processed successfully. Error: {error}"
+      invoices: Invoices
+    invoice:
+      label: Invoice
+      successMessage: 'Payment has been successfully invoiced'
+      errorMessage: 'Payment cannot be invoiced. Error: {error}'
+      button:
+        okText: Invoice
+        cancelText: Back
+    invoice_pdf:
+      label: Create
+      successMessage: 'Invoice document has been successfully cancelled'
+      errorMessage: 'Invoice document cannot be cancelled. Error: {error}'
+      button:
+        okText: Create
+        cancelText: Back
   payment:
     cancel_authorization: Cancel payment by amount
     capture: Capture payment by amount
     refund: Refund payment by amount
+    settle: Settle payment
+    invoice: Invoice payment by amount
+    invoice_pdf: Create invoice
+  frontend:
+    checkout: payever checkout

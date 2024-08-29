@@ -52,18 +52,25 @@ class PaymentRulesService
      * @param string $method
      * @param array $countries
      * @param array $currencies
+     * @param string $expression
      *
      * @return void
      * @throws \Doctrine\ORM\Exception\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */
-    public function createRule(string $ruleName, string $method, array $countries, array $currencies): void
-    {
+    public function createRule(
+        string $ruleName,
+        string $method,
+        array $countries,
+        array $currencies,
+        string $expression
+    ): void {
         $rule = new Rule();
         $rule->setName($ruleName)
             ->setEnabled(true)
             ->setStopProcessing(false)
-            ->setSortOrder(1);
+            ->setSortOrder(1)
+            ->setExpression($expression);
 
         $this->entityManager->persist($rule);
         $this->entityManager->flush($rule);

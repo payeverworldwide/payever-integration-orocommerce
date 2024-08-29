@@ -1,0 +1,7 @@
+payever:
+  frontend:
+    companyPlaceholder: Please choose the company
+  company_search_popup:
+    title: Wählen Sie Ihr Unternehmen
+    apply: Weiter
+    discard: Unternehmen nicht gefunden. Mit Eingabe fortfahren.

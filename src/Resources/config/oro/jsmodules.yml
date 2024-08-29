@@ -1,3 +1,4 @@
 dynamic-imports:
   oroimap:
     - payeverpayment/js/app/components/synchronize-component
+    - payeverpayment/js/app/components/finance-express-configuration-component

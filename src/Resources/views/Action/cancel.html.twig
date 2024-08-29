@@ -1,0 +1,26 @@
+{% extends '@OroAction/Operation/form.html.twig' %}
+
+{% block widget_content_inner %}
+    {% if form is defined %}
+        {{ 'payever.actions.modal.cancel_hint'|trans }}
+    {% endif %}
+    {{ parent() }}
+{% endblock %}
+
+{% block form_widget %}
+    {% block oro_order_cancel_widget %}
+        <strong>{{ 'payever.actions.modal.total'|trans }}: </strong> {{ form.peCancel.currencySymbol.vars.value }} {{ form.peCancel.total.vars.value|oro_format_decimal }}<br/>
+        <strong>{{ 'payever.actions.modal.cancelled'|trans }}: </strong> {{ form.peCancel.currencySymbol.vars.value }} {{ form.peCancel.totalCancelled.vars.value|oro_format_decimal }}<br/>
+        <strong>{{ 'payever.actions.modal.captured'|trans }}: </strong> {{ form.peCancel.currencySymbol.vars.value }} {{ form.peCancel.totalCaptured.vars.value|oro_format_decimal }}<br/>
+        <strong>{{ 'payever.actions.modal.refunded'|trans }}: </strong> {{ form.peCancel.currencySymbol.vars.value }} {{ form.peCancel.totalRefunded.vars.value|oro_format_decimal }}<br/>
+
+        <div class="section-content">
+            {% include '@PayeverPayment/Action/cancelOrderLines.html.twig' %}
+        </div>
+    {% endblock %}
+{% endblock %}
+
+{% block form_actions_inner %}
+    <button type="reset" class="btn">{{ 'oro.order.orderdiscount.action.cancel'|trans }}</button>
+    <button type="submit" class="btn btn-primary">{{ 'payever.actions.cancel.label'|trans }}</button>
+{% endblock %}

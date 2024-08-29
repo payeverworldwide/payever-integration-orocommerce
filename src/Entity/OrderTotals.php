@@ -54,6 +54,20 @@ class OrderTotals
     private float $refundedTotal;
 
     /**
+     * @var float
+     *
+     * @ORM\Column(name="settled_total", type="float", nullable=false)
+     */
+    private float $settledTotal;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="invoiced_total", type="float", nullable=false)
+     */
+    private float $invoicedTotal;
+
+    /**
      * @var int
      *
      * @ORM\Column(name="manual", type="integer", nullable=false)
@@ -151,6 +165,44 @@ class OrderTotals
     public function setRefundedTotal(float $amount): self
     {
         $this->refundedTotal = $amount;
+
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getSettledTotal(): float
+    {
+        return $this->settledTotal;
+    }
+
+    /**
+     * @param float $amount
+     * @return $this
+     */
+    public function setSettledTotal(float $amount): self
+    {
+        $this->settledTotal = $amount;
+
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getInvoicedTotal(): float
+    {
+        return (float) $this->invoicedTotal;
+    }
+
+    /**
+     * @param float $amount
+     * @return $this
+     */
+    public function setInvoicedTotal(float $amount): self
+    {
+        $this->invoicedTotal = $amount;
 
         return $this;
     }

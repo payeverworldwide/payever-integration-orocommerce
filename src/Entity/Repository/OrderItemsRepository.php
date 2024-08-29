@@ -3,6 +3,7 @@
 namespace Payever\Bundle\PaymentBundle\Entity\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Collections\Criteria;
 use Oro\Bundle\OrderBundle\Entity\Order;
 use Payever\Bundle\PaymentBundle\Entity\OrderItems;
 
@@ -15,7 +16,7 @@ class OrderItemsRepository extends ServiceEntityRepository
      */
     public function findByOrder(Order $order): array
     {
-        return $this->findBy(['orderId' => $order->getId()]);
+        return $this->findBy(['orderId' => $order->getId()], ['id' => Criteria::ASC]);
     }
 
     /**

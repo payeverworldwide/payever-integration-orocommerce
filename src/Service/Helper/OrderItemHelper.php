@@ -4,18 +4,17 @@ declare(strict_types=1);
 
 namespace Payever\Bundle\PaymentBundle\Service\Helper;
 
-use Oro\Bundle\AttachmentBundle\Manager\AttachmentManager;
 use Oro\Bundle\OrderBundle\Entity\Order;
 use Oro\Bundle\OrderBundle\Entity\OrderLineItem;
-use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Oro\Bundle\PaymentBundle\Provider\SurchargeProvider;
 use Oro\Bundle\ProductBundle\Entity\Product;
+use Oro\Bundle\ShippingBundle\Method\ShippingMethodProviderInterface;
 use Oro\Bundle\TaxBundle\Exception\TaxationDisabledException;
 use Oro\Bundle\TaxBundle\Model\Result;
 use Oro\Bundle\TaxBundle\Provider\TaxProviderRegistry;
-use Payever\Bundle\PaymentBundle\Constant\QueryConstant;
+use Oro\Bundle\ProductBundle\Entity\ProductImageType;
+use Payever\Sdk\Payments\Http\MessageEntity\CartItemV3Entity;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class OrderItemHelper
@@ -47,9 +46,9 @@ class OrderItemHelper
     private TranslatorInterface $translator;
 
     /**
-     * @var AttachmentManager
+     * @var ProductHelper
      */
-    private AttachmentManager $attachmentManager;
+    private ProductHelper $productHelper;
 
     /**
      * @var TaxProviderRegistry
@@ -61,16 +60,30 @@ class OrderItemHelper
      */
     private SurchargeProvider $surchargeProvider;
 
+    private ShippingMethodProviderInterface $shippingMethodProvider;
+
+
+    /**
+     * Constructor.
+     *
+     * @param TranslatorInterface $translator
+     * @param ProductHelper $productHelper
+     * @param TaxProviderRegistry $taxProviderRegistry
+     * @param SurchargeProvider $surchargeProvider
+     * @param ShippingMethodProviderInterface $shippingMethodProvider
+     */
     public function __construct(
         TranslatorInterface $translator,
-        AttachmentManager $attachmentManager,
+        ProductHelper $productHelper,
         TaxProviderRegistry $taxProviderRegistry,
         SurchargeProvider $surchargeProvider,
+        ShippingMethodProviderInterface $shippingMethodProvider
     ) {
         $this->translator = $translator;
-        $this->attachmentManager = $attachmentManager;
+        $this->productHelper = $productHelper;
         $this->taxProviderRegistry = $taxProviderRegistry;
         $this->surchargeProvider = $surchargeProvider;
+        $this->shippingMethodProvider = $shippingMethodProvider;
     }
 
     /**
@@ -118,11 +131,12 @@ class OrderItemHelper
                 self::PROP_TAX_RATE             => $taxRate,
                 self::PROP_QUANTITY             => $qty,
                 self::PROP_DESCRIPTION          => (string) $product->getDescription()->getText(),
-                self::PROP_THUMBNAIL            => $this->getImageUrl($product),
-                self::PROP_PRODUCT_URL          => null,
+                self::PROP_THUMBNAIL            => $this->productHelper->getImageUrl(
+                    $product,
+                    ProductImageType::TYPE_LISTING
+                ),
+                self::PROP_PRODUCT_URL          => $this->productHelper->getProductUrl($product),
             ];
-
-            // @todo Add url
         }
 
         $surcharge = $this->surchargeProvider->getSurcharges($order);
@@ -207,12 +221,13 @@ class OrderItemHelper
      *
      * @param Order $order
      *
-     * @return array
+     * @return CartItemV3Entity[]
      */
     public function buildCartItems(Order $order): array
     {
         $orderItems = $this->getOrderItems($order);
 
+        /** @var CartItemV3Entity[] $cartItems */
         $result = [];
         foreach ($orderItems as $item) {
             if (self::TYPE_SHIPPING === $item['type']) {
@@ -220,7 +235,7 @@ class OrderItemHelper
             }
 
             $cartItem = [
-                'name' => utf8_encode($item[self::PROP_NAME]),
+                'name' => $item[self::PROP_NAME],
                 'quantity' => $item[self::PROP_QUANTITY],
                 'price' => $item[self::PROP_UNIT_PRICE_INCL_TAX],
                 'priceNetto' => $item[self::PROP_UNIT_PRICE_EXCL_TAX],
@@ -242,23 +257,51 @@ class OrderItemHelper
     }
 
     /**
-     * @param Product $product
+     * Get Order items for payment processing.
+     * It excludes shipping and payment fees.
      *
-     * @return null|string
+     * @param Order $order
+     *
+     * @return CartItemV3Entity[]
      */
-    private function getImageUrl(Product $product): ?string
+    public function buildCartItemsV3(Order $order): array
     {
-        $image = $product->getImagesByType('listing')->first();
-        if (!$image) {
-            return null;
+        $orderItems = $this->getOrderItems($order);
+
+        /** @var CartItemV3Entity[] $cartItems */
+        $result = [];
+        foreach ($orderItems as $item) {
+            if (self::TYPE_SHIPPING === $item['type']) {
+                continue;
+            }
+
+            $totalTaxAmount = $item[self::PROP_QUANTITY] *
+                ($item[self::PROP_UNIT_PRICE_INCL_TAX] - $item[self::PROP_UNIT_PRICE_EXCL_TAX]);
+
+            $cartItem = new CartItemV3Entity();
+            $cartItem->setName($item[self::PROP_NAME])
+                ->setIdentifier($item[self::PROP_SKU])
+                ->setSku(preg_replace('#[^0-9a-z_]+#i', '-', $item[self::PROP_SKU]))
+                // Unit price of product item. Include VAT, exclude discount
+                ->setUnitPrice($item[self::PROP_UNIT_PRICE_INCL_TAX])
+                // The percentage value of tax on product item
+                ->setTaxRate($item[self::PROP_TAX_RATE])
+                // Total amount of product item, include VAT and discount
+                ->setTotalAmount($item[self::PROP_TOTAL_PRICE_INCL_TAX])
+                // Total tax amount on product item
+                ->setTotalTaxAmount(round($totalTaxAmount, 2))
+                ->setQuantity($item[self::PROP_QUANTITY])
+                ->setDescription($item[self::PROP_DESCRIPTION]);
+
+            if (self::TYPE_PRODUCT === $item[self::PROP_TYPE]) {
+                $cartItem->setThumbnail($item[self::PROP_THUMBNAIL])
+                    ->setProductUrl($item[self::PROP_PRODUCT_URL]);
+            }
+
+            $result[] = $cartItem;
         }
 
-        return $this->attachmentManager->getFilteredImageUrl(
-            $image->getImage(),
-            'product_small',
-            AttachmentManager::DEFAULT_FORMAT,
-            UrlGeneratorInterface::ABSOLUTE_URL
-        );
+        return $result;
     }
 
     /**
@@ -268,7 +311,7 @@ class OrderItemHelper
      *
      * @return Result|null
      */
-    private function getTax($orderLine): ?Result
+    public function getTax($orderLine): ?Result
     {
         try {
             $tax = $this->taxProviderRegistry->getEnabledProvider()->getTax($orderLine);
@@ -277,5 +320,21 @@ class OrderItemHelper
         }
 
         return $tax;
+    }
+
+    /**
+     * Get Shipping Label.
+     *
+     * @param string $identifier
+     * @return string
+     */
+    public function getShippingLabel(string $identifier): string
+    {
+        $shippingMethod = $this->shippingMethodProvider->getShippingMethod($identifier);
+        if (!$shippingMethod) {
+            return $this->translator->trans('oro.order.subtotals.shipping_cost');
+        }
+
+        return $shippingMethod->getLabel();
     }
 }

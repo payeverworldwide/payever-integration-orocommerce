@@ -1,0 +1,20 @@
+layout:
+  actions:
+    - '@setBlockTheme':
+        themes: '@PayeverPayment/layouts/default/payever_payment_payment/templates/payment.html.twig'
+
+    - '@setOption':
+        id: title
+        optionName: defaultValue
+        optionValue:
+          label: '=data["translator"].getTrans("payever.frontend.checkout")'
+
+    - '@add':
+        id: payever_payment_page
+        parentId: page_content
+        blockType: payever_payment_page
+        options:
+          iframeUrl: '=context["iframeUrl"]'
+
+    - '@remove':
+        id: page_title

@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Payever\Bundle\PaymentBundle\Method\PaymentAction;
 
-use Oro\Bundle\OrderBundle\Entity\Order;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
-use Oro\Bundle\PaymentBundle\Provider\PaymentTransactionProvider;
 use Payever\Bundle\PaymentBundle\Method\Config\PayeverConfig;
 use Payever\Bundle\PaymentBundle\Service\Payment\PaymentProcessorService;
 use Psr\Log\LoggerInterface;
@@ -38,6 +36,7 @@ class PurchasePaymentAction implements PaymentActionInterface
         try {
             $redirectUrl = $this->paymentProcessorService
                 ->setConfig($config)
+                ->saveExternalId($paymentTransaction)
                 ->getRedirectUrl($paymentTransaction);
         } catch (\Exception $exception) {
             $this->logger->critical('Purchase action error: ' . $exception->getMessage());

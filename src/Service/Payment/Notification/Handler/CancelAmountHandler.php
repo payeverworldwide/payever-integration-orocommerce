@@ -16,7 +16,10 @@ class CancelAmountHandler extends NotificationHandlerAbstract implements Handler
     public function execute(NotificationResultEntity $notificationResultEntity): array
     {
         $orderReference = $notificationResultEntity->getReference();
-        $order = $this->transactionHelper->getOrderByID($orderReference);
+        $order = $this->transactionHelper->getOrderByIdentifier($orderReference);
+        if (!$order) {
+            throw new \UnexpectedValueException('Order is not found');
+        }
 
         $paymentId = $notificationResultEntity->getId();
         $this->logger->info(
@@ -55,12 +58,13 @@ class CancelAmountHandler extends NotificationHandlerAbstract implements Handler
             $this->entityManager->flush($total);
         }
 
-        $this->registerCancelTransaction(
+        $paymentTransaction = $this->transactionBuilder->registerCancelTransaction(
             $order,
             $paymentId,
             $cancelAmount,
             $notificationResultEntity->toArray()
         );
+        $this->logger->info('Transaction has been registered', [$paymentTransaction->getId()]);
 
         $this->logger->info(NotificationRequestProcessor::LOG_PREFIX . ' Cancel amount. Amount: ' . $cancelAmount);
 

@@ -4,43 +4,79 @@ declare(strict_types=1);
 
 namespace Payever\Bundle\PaymentBundle\Service;
 
+use Oro\Bundle\ConfigBundle\Config\ConfigManager;
+use Payever\Bundle\PaymentBundle\Service\Factory\ZipArchiveFactory;
 use ZipArchive;
 
 class LogCollector
 {
     private const PAYEVER_LOG_PREFIX = 'payever_';
-
-    private string $logsDirectory;
-    private string $zipFile;
+    private const PAYEVER_FILE_PATTERN = 'orocommerce-logs-%s%-%s';
 
     /**
-     * @param string $logsDirectory
+     * @var string
      */
-    public function __construct(string $logsDirectory)
-    {
+    private string $logsDirectory;
+
+    /**
+     * @var string
+     */
+    private $zipFile;
+
+    /**
+     * @var string|null
+     */
+    private $zipFileName;
+
+    /**
+     * @var ZipArchiveFactory
+     */
+    private ZipArchiveFactory $zipArchiveFactory;
+
+    /**
+     * @var ConfigManager
+     */
+    private ConfigManager $configManager;
+
+    /**
+     * Constructor.
+     *
+     * @param string $logsDirectory
+     * @param ZipArchiveFactory $zipArchiveFactory
+     * @param ConfigManager $configManager
+     */
+    public function __construct(
+        string $logsDirectory,
+        ZipArchiveFactory $zipArchiveFactory,
+        ConfigManager $configManager
+    ) {
         $this->logsDirectory = $logsDirectory;
-        $this->zipFile = $this->logsDirectory . DIRECTORY_SEPARATOR . uniqid('payever_logs_') . '.zip';
+        $this->zipArchiveFactory = $zipArchiveFactory;
+        $this->configManager = $configManager;
     }
 
     /**
      * Collect and zip log files.
      *
+     * @param bool $includeSystemLogs
      * @return $this
      */
-    public function collect(): self
+    public function collect(bool $includeSystemLogs): self
     {
+        $this->zipFile = $this->logsDirectory . DIRECTORY_SEPARATOR . $this->getFileName();
+
         // Make zip
-        $zipArchive = new ZipArchive();
+        $zipArchive = $this->zipArchiveFactory->create();
         $zipArchive->open($this->zipFile, ZipArchive::CREATE);
 
         // Add log files
         foreach (glob($this->logsDirectory . DIRECTORY_SEPARATOR . '*.log') as $filename) {
-            if (str_contains($filename, self::PAYEVER_LOG_PREFIX)) {
+            if (str_contains(basename($filename), self::PAYEVER_LOG_PREFIX)) {
                 $zipArchive->addFile($filename, basename($filename));
                 continue;
             }
 
-            if (in_array(basename($filename), ['prod.log', 'dev.log'])) {
+            if ($includeSystemLogs && in_array(basename($filename), ['prod.log', 'dev.log'])) {
                 $zipArchive->addFile($filename, basename($filename));
             }
         }
@@ -57,7 +93,7 @@ class LogCollector
      */
     public function getContents(): ?string
     {
-        if (file_exists($this->zipFile)) {
+        if ($this->zipFile && file_exists($this->zipFile)) {
             return file_get_contents($this->zipFile);
         }
 
@@ -71,7 +107,7 @@ class LogCollector
      */
     public function remove(): self
     {
-        if (file_exists($this->zipFile)) {
+        if ($this->zipFile && file_exists($this->zipFile)) {
             unlink($this->zipFile);
         }
 
@@ -92,5 +128,34 @@ class LogCollector
         }
 
         return $this;
+    }
+
+    /**
+     * Get File Name.
+     *
+     * @return string
+     */
+    public function getFileName(): string
+    {
+        if ($this->zipFileName) {
+            return $this->zipFileName;
+        }
+
+        $businessUuid = $this->getBusinessUuid();
+        $this->zipFileName = sprintf(
+            self::PAYEVER_FILE_PATTERN,
+            $businessUuid ? $businessUuid : uniqid('payever'),
+            (new \DateTime())->format('Y-m-d-H-i-s'),
+        ) . '.zip';
+
+        return $this->zipFileName;
+    }
+
+    /**
+     * @return string|null
+     */
+    private function getBusinessUuid(): ?string
+    {
+        return $this->configManager->get('payever_payment.business_uuid');
     }
 }

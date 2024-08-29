@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Payever\Bundle\PaymentBundle\Service\Payment;
 
+use Oro\Bundle\OrderBundle\Entity\Order;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
+use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
 use Payever\Bundle\PaymentBundle\Service\Api\ServiceProvider;
 use Payever\Bundle\PaymentBundle\Service\Helper\TransactionHelper;
 use Payever\Sdk\Payments\Action\ActionDeciderInterface;
@@ -15,7 +17,6 @@ use Psr\Log\LoggerInterface;
 class AllowedActionsService
 {
     private array $payments = [];
-
     private ServiceProvider $serviceProvider;
     private TransactionHelper $transactionHelper;
     private LoggerInterface $logger;
@@ -34,15 +35,16 @@ class AllowedActionsService
      * Checks if specified action is allowed.
      *
      * @param PaymentTransaction $paymentTransaction
-     * @param $action
+     * @param string $action
      *
      * @return bool
      * @throws \Exception
      */
-    public function isActionAllowed(PaymentTransaction $paymentTransaction, $action): bool
+    public function isActionAllowed(PaymentTransaction $paymentTransaction, string $action): bool
     {
+        // @todo Check if the payment transaction relates to Payever
         $paymentId = $this->transactionHelper->getPaymentId($paymentTransaction);
-        if (empty($paymentId)) {
+        if (!$paymentId) {
             $this->logger->critical(
                 'Payment transaction ' . $paymentTransaction->getId() . ' does not have payment ID.'
             );
@@ -60,6 +62,50 @@ class AllowedActionsService
                 $action,
                 $result ? 'enabled' : 'disabled'
             )
+        );
+
+        return $result;
+    }
+
+    /**
+     * Checks if specified action is allowed.
+     * @param Order $order
+     * @param string $action
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    public function isOrderActionAllowed(Order $order, string $action): bool
+    {
+        $this->logger->debug('isOrderActionAllowed', [$order->getId(), $action]);
+
+        $paymentTransaction = null;
+        $actions = [PaymentMethodInterface::AUTHORIZE, PaymentMethodInterface::CAPTURE];
+        foreach ($actions as $item) {
+            try {
+                $paymentTransaction = $this->transactionHelper->getPaymentTransaction(
+                    $order,
+                    $item
+                );
+
+                break;
+            } catch (\InvalidArgumentException $exception) {
+                continue;
+            }
+        }
+
+        if (!$paymentTransaction) {
+            $this->logger->critical(
+                'Order ' . $order->getId() . ' does not have any authorized or captured transactions.'
+            );
+
+            return false;
+        }
+
+        $result = $this->isActionAllowed($paymentTransaction, $action);
+        $this->logger->debug(
+            'isOrderActionAllowed: ' . var_export($result, true),
+            [$order->getId(), $action]
         );
 
         return $result;

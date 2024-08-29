@@ -1,4 +1,5 @@
 operations:
+  ### Payment Transactions Operations
   payeverpayment_order_payment_transaction_cancel:
     #extends: oro_order_payment_transaction_cancel
     #substitute_operation: oro_order_payment_transaction_cancel
@@ -499,3 +500,582 @@ operations:
         allowMaximize: false
         okText: oro.order.payment_transaction.refund.button.okText
         cancelText: oro.order.payment_transaction.refund.button.resetText
+
+  payeverpayment_order_payment_transaction_settle:
+    label: payever.payment.settle
+    button_options:
+      icon: fa-handshake-o
+      class: 'btn-settle'
+    applications: [default]
+    datagrids:
+      - order-payment-transactions-grid
+    order: 40
+    preactions:
+      - '@call_service_method':
+          service: oro_payment.payment_method.composite_provider
+          method: getPaymentMethod
+          method_parameters: [ $.data.paymentMethod ]
+          attribute: $.paymentMethod
+      - '@call_service_method':
+          conditions:
+            '@and':
+              - '@instanceof': [ $.paymentMethod, Payever\Bundle\PaymentBundle\Method\Payever ]
+          service: payever.service.payment.allowed_actions
+          method: isActionAllowed
+          method_parameters: [ $.data, 'settle' ]
+          attribute: $.isActionAllowed
+      - '@find_entity':
+          class: 'Oro\Bundle\OrderBundle\Entity\Order'
+          where:
+            id: $.data.entityIdentifier
+          attribute: $.order
+      - '@call_service_method':
+          conditions:
+            '@and':
+              - '@instanceof': [ $.paymentMethod, Payever\Bundle\PaymentBundle\Method\Payever ]
+          service: payever.service.management.order
+          method: getAvailableCaptureAmount
+          method_parameters: [ $.order ]
+          attribute: $.availableAmount
+      - '@call_service_method':
+          service: payever.formatter.money_value_type
+          method: format
+          method_parameters: [ 0.1 ]
+          attribute: $.minFormattedAmount
+      - '@call_service_method':
+          service: payever.formatter.money_value_type
+          method: format
+          method_parameters: [ $.availableAmount ]
+          attribute: $.maxFormattedAmount
+      - '@trans':
+          id: payever.constraints.localized_range.min_message
+          attribute: $.minMessage
+          params:
+            '{min}': $.minFormattedAmount
+      - '@trans':
+          id: payever.constraints.localized_range.max_message
+          attribute: $.maxMessage
+          params:
+            '{max}': $.maxFormattedAmount
+      - '@assign_value':
+          conditions:
+            '@not_empty': $.invoiceAmount
+          parameters: [ $.transactionOptions, { 'invoiceAmount': $.invoiceAmount } ]
+      - '@call_service_method':
+          service: oro_locale.formatter.number
+          method: formatCurrency
+          method_parameters: [ $.invoiceAmount, $.data.currency ]
+          attribute: $.amountWithCurrency
+    preconditions:
+      '@and':
+        - '@acl_granted': ['CHARGE_AUTHORIZED_PAYMENTS', $.order]
+        - '@equal': [ $.data.entity_class, 'Oro\Bundle\OrderBundle\Entity\Order' ]
+        - '@equal': [ $.data.action, 'capture' ]
+        - '@equal': [ $.data.active, false ]
+        - '@equal': [ $.data.successful, true ]
+        - '@not_empty': $.paymentMethod
+        - '@instanceof': [ $.paymentMethod, 'Payever\Bundle\PaymentBundle\Method\Payever' ]
+        - '@equal': [ $.isActionAllowed, true ]
+    attributes:
+      invoiceAmount:
+        label: Amount
+        type: string
+    form_options:
+      attribute_fields:
+        invoiceAmount:
+          form_type: Symfony\Component\Form\Extension\Core\Type\HiddenType
+      attribute_default_values:
+        invoiceAmount: $.availableAmount
+    actions:
+      - '@call_service_method':
+          service: payever.provider.payment_action
+          method: processSettleForm
+          method_parameters: [ $.form ]
+          attribute: $.formResponse
+      - '@flash_message':
+          conditions:
+            '@eq': [ $.formResponse.success, true ]
+          message: $.formResponse.message
+          type: 'success'
+      - '@flash_message':
+          conditions:
+            '@eq': [ $.formResponse.success, false ]
+          message: $.formResponse.message
+          type: 'error'
+    frontend_options:
+      title: payever.actions.btn.settle.label
+      template: '@PayeverPayment/Action/settleTransaction.html.twig'
+      options:
+        allowMaximize: false
+        okText: payever.actions.settle.button.okText
+        cancelText: payever.actions.settle.button.cancelText
+
+  payeverpayment_order_payment_transaction_invoice_amount:
+    #extends: oro_order_payment_transaction_refund
+    label: payever.payment.invoice
+    button_options:
+      icon: fa-money
+      class: 'btn-invoice'
+    applications: [default]
+    datagrids:
+      - order-payment-transactions-grid
+    order: 40
+    preactions:
+      - '@call_service_method':
+          service: oro_payment.payment_method.composite_provider
+          method: getPaymentMethod
+          method_parameters: [ $.data.paymentMethod ]
+          attribute: $.paymentMethod
+      - '@call_service_method':
+          conditions:
+            '@and':
+              - '@instanceof': [ $.paymentMethod, Payever\Bundle\PaymentBundle\Method\Payever ]
+          service: payever.service.payment.allowed_actions
+          method: isActionAllowed
+          method_parameters: [ $.data, 'invoice' ]
+          attribute: $.isActionAllowed
+      - '@find_entity':
+          class: 'Oro\Bundle\OrderBundle\Entity\Order'
+          where:
+            id: $.data.entityIdentifier
+          attribute: $.order
+      - '@call_service_method':
+          conditions:
+            '@and':
+              - '@instanceof': [ $.paymentMethod, Payever\Bundle\PaymentBundle\Method\Payever ]
+          service: payever.service.management.order
+          method: getAvailableInvoicedAmount
+          method_parameters: [ $.order ]
+          attribute: $.availableAmount
+      - '@call_service_method':
+          service: payever.formatter.money_value_type
+          method: format
+          method_parameters: [ 0.1 ]
+          attribute: $.minFormattedAmount
+      - '@call_service_method':
+          service: payever.formatter.money_value_type
+          method: format
+          method_parameters: [ $.availableAmount ]
+          attribute: $.maxFormattedAmount
+      - '@trans':
+          id: payever.constraints.localized_range.min_message
+          attribute: $.minMessage
+          params:
+            '{min}': $.minFormattedAmount
+      - '@trans':
+          id: payever.constraints.localized_range.max_message
+          attribute: $.maxMessage
+          params:
+            '{max}': $.maxFormattedAmount
+      - '@assign_value':
+          conditions:
+            '@not_empty': $.invoiceAmount
+          parameters: [ $.transactionOptions, { 'invoiceAmount': $.invoiceAmount } ]
+      - '@call_service_method':
+          service: oro_locale.formatter.number
+          method: formatCurrency
+          method_parameters: [ $.invoiceAmount, $.data.currency ]
+          attribute: $.amountWithCurrency
+    preconditions:
+      '@and':
+        - '@acl_granted': ['CHARGE_AUTHORIZED_PAYMENTS', $.order]
+        - '@equal': [ $.data.entity_class, 'Oro\Bundle\OrderBundle\Entity\Order' ]
+        - '@equal': [ $.data.action, 'capture' ]
+        - '@equal': [ $.data.active, false ]
+        - '@equal': [ $.data.successful, true ]
+        - '@not_empty': $.paymentMethod
+        - '@instanceof': [ $.paymentMethod, 'Payever\Bundle\PaymentBundle\Method\Payever' ]
+        - '@equal': [ $.isActionAllowed, true ]
+    attributes:
+      invoiceAmount:
+        label: Amount
+        type: string
+    form_options:
+      attribute_fields:
+        invoiceAmount:
+          form_type: Symfony\Component\Form\Extension\Core\Type\NumberType
+          options:
+            required: true
+            constraints:
+              - NotBlank: ~
+              - Payever\Bundle\PaymentBundle\Validator\Constraints\LocalizedRange:
+                  min: $.minFormattedAmount
+                  max: $.maxFormattedAmount
+                  minMessage: $.minMessage
+                  maxMessage: $.maxMessage
+      attribute_default_values:
+        invoiceAmount: $.availableAmount
+    actions:
+      - '@call_service_method':
+          service: payever.provider.payment_action
+          method: processInvoiceForm
+          method_parameters: [ $.form, $.invoiceAmount ]
+          attribute: $.formResponse
+      - '@flash_message':
+          conditions:
+            '@eq': [ $.formResponse.success, true ]
+          message: $.formResponse.message
+          type: 'success'
+      - '@flash_message':
+          conditions:
+            '@eq': [ $.formResponse.success, false ]
+          message: $.formResponse.message
+          type: 'error'
+    frontend_options:
+      title: payever.actions.btn.invoice.label
+      template: '@PayeverPayment/Action/invoiceTransaction.html.twig'
+      options:
+        allowMaximize: false
+        okText: payever.actions.invoice.button.okText
+        cancelText: payever.actions.invoice.button.cancelText
+
+  ### Order View Operations
+  # Cancel Operation
+  payever_payment_cancel:
+    label: payever.actions.btn.cancel.label
+    routes:
+      - oro_order_view
+    frontend_options:
+      template: '@PayeverPayment/Action/cancel.html.twig'
+    button_options:
+      icon: fa-money
+    attributes:
+      peCancel:
+        label: ' '
+        type: entity
+        options:
+          class: Payever\Bundle\PaymentBundle\Form\Entity\OrderPayment
+    form_options:
+      attribute_fields:
+        peCancel:
+          form_type: Payever\Bundle\PaymentBundle\Form\Type\OrderPaymentCancelType
+          options:
+            required: true
+      attribute_default_values:
+        peCancel: $.orderPayment
+    form_init:
+      - '@call_service_method':
+          service: payever.provider.payment_action
+          method: getOrderPayment
+          method_parameters: [ $.data ]
+          attribute: $.orderPayment
+    preactions:
+      - '@call_service_method':
+          service: payever.service.payment.allowed_actions
+          method: isOrderActionAllowed
+          method_parameters: [ $.data, 'partialCancel' ]
+          attribute: $.isOrderActionAllowed
+    preconditions:
+      '@and':
+        - '@acl_granted': [ 'CANCEL_PAYMENTS', $.data ]
+        - '@equal': [ $.isOrderActionAllowed, true ]
+    conditions:
+      '@payever_cancel_form_valid':
+    actions:
+      - '@call_service_method':
+          service: payever.provider.payment_action
+          method: processCancelForm
+          method_parameters: [ $.form ]
+          attribute: $.formResponse
+      - '@flash_message':
+          conditions:
+            '@eq': [ $.formResponse.success, true ]
+          message: $.formResponse.message
+          type: 'success'
+      - '@flash_message':
+          conditions:
+            '@eq': [ $.formResponse.success, false ]
+          message: $.formResponse.message
+          type: 'error'
+
+  # Ship Operation
+  payever_payment_ship:
+    label: payever.actions.btn.ship.label
+    routes:
+      - oro_order_view
+    frontend_options:
+      template: '@PayeverPayment/Action/capture.html.twig'
+    button_options:
+      icon: fa-truck
+    attributes:
+      peShip:
+        label: ' '
+        type: entity
+        options:
+          class: Payever\Bundle\PaymentBundle\Form\Entity\OrderPayment
+    form_options:
+      attribute_fields:
+        peShip:
+          form_type: Payever\Bundle\PaymentBundle\Form\Type\OrderPaymentCaptureType
+          options:
+            required: true
+      attribute_default_values:
+        peShip: $.orderPayment
+    form_init:
+      - '@call_service_method':
+          service: payever.provider.payment_action
+          method: getOrderPayment
+          method_parameters: [ $.data ]
+          attribute: $.orderPayment
+    preactions:
+      - '@call_service_method':
+          service: payever.service.payment.allowed_actions
+          method: isOrderActionAllowed
+          method_parameters: [ $.data, 'partialShipping' ]
+          attribute: $.isOrderActionAllowed
+    preconditions:
+      '@and':
+        - '@acl_granted': [ 'CHARGE_AUTHORIZED_PAYMENTS', $.data ]
+        - '@equal': [ $.isOrderActionAllowed, true ]
+    conditions:
+      '@payever_ship_form_valid':
+    actions:
+      - '@call_service_method':
+          service: payever.provider.payment_action
+          method: processShipForm
+          method_parameters: [ $.form ]
+          attribute: $.formResponse
+      - '@flash_message':
+          conditions:
+            '@eq': [ $.formResponse.success, true ]
+          message: $.formResponse.message
+          type: 'success'
+      - '@flash_message':
+          conditions:
+            '@eq': [ $.formResponse.success, false ]
+          message: $.formResponse.message
+          type: 'error'
+
+  # Refund Operation
+  payever_payment_refund:
+    label: payever.actions.btn.refund.label
+    routes:
+      - oro_order_view
+    frontend_options:
+      template: '@PayeverPayment/Action/refund.html.twig'
+    button_options:
+      icon: fa-money
+    attributes:
+      peRefund:
+        label: ' '
+        type: entity
+        options:
+          class: Payever\Bundle\PaymentBundle\Form\Entity\OrderPayment
+    form_options:
+      attribute_fields:
+        peRefund:
+          form_type: Payever\Bundle\PaymentBundle\Form\Type\OrderPaymentRefundType
+          options:
+            required: true
+      attribute_default_values:
+        peRefund: $.orderPayment
+    form_init:
+      - '@call_service_method':
+          service: payever.provider.payment_action
+          method: getOrderPayment
+          method_parameters: [ $.data ]
+          attribute: $.orderPayment
+    preactions:
+      - '@call_service_method':
+          service: payever.service.payment.allowed_actions
+          method: isOrderActionAllowed
+          method_parameters: [ $.data, 'partialRefund' ]
+          attribute: $.isOrderActionAllowed
+    preconditions:
+      '@and':
+        - '@acl_granted': [ 'REFUND_PAYMENTS', $.data ]
+        - '@equal': [ $.isOrderActionAllowed, true ]
+    conditions:
+      '@payever_refund_form_valid':
+    actions:
+      - '@call_service_method':
+          service: payever.provider.payment_action
+          method: processRefundForm
+          method_parameters: [ $.form ]
+          attribute: $.formResponse
+      - '@flash_message':
+          conditions:
+            '@eq': [ $.formResponse.success, true ]
+          message: $.formResponse.message
+          type: 'success'
+      - '@flash_message':
+          conditions:
+            '@eq': [ $.formResponse.success, false ]
+          message: $.formResponse.message
+          type: 'error'
+
+  # Claim Operation
+  payever_payment_claim:
+    label: payever.actions.btn.claim.label
+    routes:
+      - oro_order_view
+    frontend_options:
+      template: '@PayeverPayment/Action/claim.html.twig'
+    button_options:
+      icon: fa-money
+    attributes:
+      isDisputed:
+        label: payever.actions.claim.isDisputed
+        type: bool
+    form_options:
+      attribute_fields:
+        isDisputed:
+          form_type: Symfony\Component\Form\Extension\Core\Type\CheckboxType
+          options:
+            required: false
+    preactions:
+      - '@call_service_method':
+          service: payever.service.payment.allowed_actions
+          method: isOrderActionAllowed
+          method_parameters: [ $.data, 'claim' ]
+          attribute: $.isOrderActionAllowed
+    preconditions:
+      '@and':
+        - '@acl_granted': [ 'CLAIM_PAYMENTS', $.data ]
+        - '@equal': [ $.isOrderActionAllowed, true ]
+    actions:
+      - '@call_service_method':
+          service: payever.provider.payment_action
+          method: processClaimForm
+          method_parameters: [ $.form ]
+          attribute: $.formResponse
+      - '@flash_message':
+          conditions:
+            '@eq': [ $.formResponse.success, true ]
+          message: $.formResponse.message
+          type: 'success'
+      - '@flash_message':
+          conditions:
+            '@eq': [ $.formResponse.success, false ]
+          message: $.formResponse.message
+          type: 'error'
+
+  # Claim Upload Operation
+  payever_payment_claim_upload:
+    label: payever.actions.btn.claim_upload.label
+    routes:
+      - oro_order_view
+    frontend_options:
+      template: '@PayeverPayment/Action/claimUpload.html.twig'
+    button_options:
+      icon: fa-money
+    attributes:
+      peClaimUpload:
+        label: payever.actions.modal.claim_upload_hint
+        type: entity
+        options:
+          class: Payever\Bundle\PaymentBundle\Form\Entity\OrderClaimUpload
+    form_options:
+      attribute_fields:
+        peClaimUpload:
+          form_type: Payever\Bundle\PaymentBundle\Form\Type\OrderPaymentClaimUploadType
+          options:
+            required: true
+      attribute_default_values:
+        peClaimUpload: $.orderClaimUpload
+    preactions:
+      - '@call_service_method':
+          service: payever.service.payment.allowed_actions
+          method: isOrderActionAllowed
+          method_parameters: [ $.data, 'claim_upload' ]
+          attribute: $.isOrderActionAllowed
+    preconditions:
+      '@and':
+        - '@acl_granted': [ 'CLAIM_UPLOAD_PAYMENTS', $.data ]
+        - '@equal': [ $.isOrderActionAllowed, true ]
+    conditions:
+      '@payever_claim_upload_form_valid':
+    actions:
+      - '@call_service_method':
+          service: payever.provider.payment_action
+          method: processClaimUploadForm
+          method_parameters: [ $.form ]
+          attribute: $.formResponse
+      - '@flash_message':
+          conditions:
+            '@eq': [ $.formResponse.success, true ]
+          message: $.formResponse.message
+          type: 'success'
+      - '@flash_message':
+          conditions:
+            '@eq': [ $.formResponse.success, false ]
+          message: $.formResponse.message
+          type: 'error'
+
+  payever_payment_invoice_pdf:
+    label: payever.payment.invoice_pdf
+    routes:
+      - oro_order_view
+    frontend_options:
+      template: '@PayeverPayment/Action/invoicePdf.html.twig'
+    button_options:
+      icon: fa-file-pdf-o
+    preactions:
+      - '@call_service_method':
+          service: payever.service.payment_invoice
+          method: getNextOrderInvoiceNumber
+          attribute: $.nextOrderInvoiceNumber
+      - '@call_service_method':
+          service: payever.service.payment_invoice
+          method: getOrderInvoiceDate
+          attribute: $.orderInvoiceDate
+      - '@call_service_method':
+          service: oro_payment.payment_method.composite_provider
+          method: getPaymentMethod
+          method_parameters: [ $.data.paymentMethod ]
+          attribute: $.paymentMethod
+    preconditions:
+      '@and':
+        - '@acl_granted': ['CHARGE_AUTHORIZED_PAYMENTS', $.order]
+        - '@not_empty': $.paymentMethod
+        - '@instanceof': [ $.paymentMethod, 'Payever\Bundle\PaymentBundle\Method\Payever' ]
+    attributes:
+      invoiceNumber:
+        label: Number
+        type: string
+      invoiceDate:
+        label: Date
+        type: string
+      invoiceComment:
+        label: Comment
+        type: string
+      invoiceEmail:
+        label: Send document
+        type: string
+    form_options:
+      attribute_fields:
+        invoiceNumber:
+          form_type: Symfony\Component\Form\Extension\Core\Type\TextType
+          options:
+            required: true
+            constraints:
+              - NotBlank: ~
+        invoiceDate:
+          form_type: Oro\Bundle\FormBundle\Form\Type\OroDateType
+          options:
+            required: true
+            constraints:
+              - NotBlank: ~
+        invoiceComment:
+          form_type: Symfony\Component\Form\Extension\Core\Type\TextareaType
+        invoiceEmail:
+          form_type: Symfony\Component\Form\Extension\Core\Type\CheckboxType
+      attribute_default_values:
+        invoiceNumber: $.nextOrderInvoiceNumber
+        invoiceDate: $.orderInvoiceDate
+    actions:
+      - '@call_service_method':
+          service: payever.provider.payment_action
+          method: processInvoicePdf
+          method_parameters: [ $.form ]
+          attribute: $.formResponse
+      - '@flash_message':
+          conditions:
+            '@eq': [ $.formResponse.success, true ]
+          message: $.formResponse.message
+          type: 'success'
+      - '@flash_message':
+          conditions:
+            '@eq': [ $.formResponse.success, false ]
+          message: $.formResponse.message
+          type: 'error'

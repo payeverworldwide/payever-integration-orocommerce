@@ -14,6 +14,8 @@ services:
       - '@request_stack'
       - '@session'
       - '@payever.service.logger'
+      - '@payever.service.api.service_provider'
+      - '@router'
 
   payever.event_listener.order_payment_transaction_grid:
     class: Payever\Bundle\PaymentBundle\EventListener\OrderPaymentTransactionsGridListener

@@ -1,0 +1,19 @@
+{% block _fe_shopping_list_widget %}
+    {% if shoppingLists is not empty %}
+        {% set shoppingList = shoppingLists|first %}
+        {% set cartDetails = payever_cart_details(shoppingList) %}
+
+        {% set attr = layout_attr_defaults(attr, {
+            'data-page-component-module': 'oroui/js/app/components/view-component',
+            '~data-page-component-options': {
+                view: 'payeverpayment/js/app/components/finance-express-shopping-list-component',
+                settings: settings,
+                cartDetails: cartDetails
+            },
+        }) %}
+
+        <div {{ block('block_attributes') }}>
+            {{ block_widget(block) }}
+        </div>
+    {% endif %}
+{% endblock %}

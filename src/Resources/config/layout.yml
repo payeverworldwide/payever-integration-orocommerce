@@ -1,0 +1,13 @@
+services:
+  payever.layout.data_provider.finance_express:
+    class: 'Payever\Bundle\PaymentBundle\Layout\DataProvider\FinanceExpressProvider'
+    arguments:
+      - '@payever.service.finance_express_config'
+      - '@oro_config.manager'
+      - '@oro_customer.placeholder.filter'
+      - '@oro_checkout.api.guest_checkout_checker'
+      - '@router'
+      - '@payever.service.helper.order'
+      - '@request_stack'
+    tags:
+      - { name: layout.data_provider, alias: 'payever_finance_express_data_layer' }

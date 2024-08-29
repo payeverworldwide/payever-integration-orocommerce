@@ -13,7 +13,8 @@ use Oro\Bundle\PaymentBundle\Provider\PaymentTransactionProvider;
 
 class TransactionHelper
 {
-    private const FIELD_ID = 'id';
+    public const FIELD_ID = 'id';
+    public const FIELD_EXTERNAL_ID = 'external_id';
 
     private Registry $doctrine;
     private DoctrineHelper $doctrineHelper;
@@ -29,20 +30,27 @@ class TransactionHelper
         $this->paymentTransactionProvider = $paymentTransactionProvider;
     }
 
-    public function getOrderByID($orderId): ?Order
+    /**
+     * Get Order by identifier.
+     *
+     * @param string $identifier
+     * @return Order|null
+     */
+    public function getOrderByIdentifier(string $identifier): ?Order
     {
-        return $this->getOrderRepository()->findOneBy(
-            ['id' => intval($orderId)]
-        );
+        return $this->getOrderRepository()->findOneBy(['identifier' => $identifier]);
     }
 
-    public function getPaymentTransaction(int $orderId, string $action): PaymentTransaction
+    /**
+     * Get Payment Transaction by action.
+     *
+     * @param Order $order
+     * @param string $action
+     *
+     * @return PaymentTransaction
+     */
+    public function getPaymentTransaction(Order $order, string $action): PaymentTransaction
     {
-        $order = $this->getOrderByID($orderId);
-        if (!$order) {
-            throw new \InvalidArgumentException('Order is not found.');
-        }
-
         $paymentTransaction = $this->paymentTransactionProvider->getPaymentTransaction(
             $order,
             [
@@ -106,17 +114,33 @@ class TransactionHelper
      *
      * @param PaymentTransaction $paymentTransaction
      *
-     * @return string
-     * @throws \Exception
+     * @return null|string
      */
-    public function getPaymentId(PaymentTransaction $paymentTransaction): string
+    public function getPaymentId(PaymentTransaction $paymentTransaction): ?string
     {
         $additionalData = $this->getTransactionAdditionalData($paymentTransaction);
         if (isset($additionalData[self::FIELD_ID])) {
             return $additionalData[self::FIELD_ID];
         }
 
-        throw new \Exception('Payment transaction does not have stored payment id.');
+        return null;
+    }
+
+    /**
+     * Get Payment ID.
+     *
+     * @param PaymentTransaction $paymentTransaction
+     *
+     * @return null|string
+     */
+    public function getExternalId(PaymentTransaction $paymentTransaction): ?string
+    {
+        $additionalData = $this->getTransactionAdditionalData($paymentTransaction);
+        if (isset($additionalData[self::FIELD_EXTERNAL_ID])) {
+            return $additionalData[self::FIELD_EXTERNAL_ID];
+        }
+
+        return null;
     }
 
     /**
@@ -137,7 +161,7 @@ class TransactionHelper
         $paymentTransaction->setTransactionOptions($transactionOptions);
     }
 
-    private function getOrderRepository(): ?OrderRepository
+    public function getOrderRepository(): ?OrderRepository
     {
         return $this->doctrine
             ->getManagerForClass(Order::class)

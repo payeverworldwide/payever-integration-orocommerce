@@ -20,7 +20,7 @@ class DownloadLogsController extends AbstractController
         Request $request,
         LogCollector $logCollector
     ): Response {
-        $logCollector->collect();
+        $logCollector->collect(true);
         $contents = $logCollector->getContents();
         $logCollector->remove();
 

@@ -1,0 +1,30 @@
+{% block _fe_product_view_widget %}
+    {% set productDetail = payever_product_detail(product) %}
+    {% if productDetail is not empty %}
+        {% set isRenderable = (
+            (
+                not is_configurable_product_type(product.type) and
+                not is_kit_product_type(product.type)
+            ) or
+            matrixFormType == 'none'
+        ) %}
+        {% if isRenderable %}
+            {% set productDetail = productDetail|merge({price: (productPrices|default([])|first).price|default(0)}) %}
+        {% endif %}
+
+        {% set attr = layout_attr_defaults(attr, {
+            'data-page-component-module': 'oroui/js/app/components/view-component',
+            '~data-page-component-options': {
+                view: 'payeverpayment/js/app/components/finance-express-product-component',
+                settings: settings,
+                product: product,
+                productDetail: productDetail,
+                productPrices: productPrices,
+            },
+        }) %}
+
+        <div {{ block('block_attributes') }}>
+            {{ block_widget(block) }}
+        </div>
+    {% endif %}
+{% endblock %}

@@ -16,7 +16,10 @@ class ShipAmountHandler extends NotificationHandlerAbstract implements HandlerIn
     public function execute(NotificationResultEntity $notificationResultEntity): array
     {
         $orderReference = $notificationResultEntity->getReference();
-        $order = $this->transactionHelper->getOrderByID($orderReference);
+        $order = $this->transactionHelper->getOrderByIdentifier($orderReference);
+        if (!$order) {
+            throw new \UnexpectedValueException('Order is not found');
+        }
 
         $paymentId = $notificationResultEntity->getId();
         $this->logger->info(sprintf(
@@ -53,12 +56,13 @@ class ShipAmountHandler extends NotificationHandlerAbstract implements HandlerIn
             $this->entityManager->flush($total);
         }
 
-        $this->registerCaptureTransaction(
+        $paymentTransaction = $this->transactionBuilder->registerCaptureTransaction(
             $order,
             $paymentId,
             $captureAmount,
             $notificationResultEntity->toArray()
         );
+        $this->logger->info('Transaction has been registered', [$paymentTransaction->getId()]);
 
         $this->logger->info(NotificationRequestProcessor::LOG_PREFIX . ' Captured amount. Amount: ' . $captureAmount);
 

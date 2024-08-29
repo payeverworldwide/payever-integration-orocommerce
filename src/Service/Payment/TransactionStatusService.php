@@ -5,16 +5,18 @@ declare(strict_types=1);
 namespace Payever\Bundle\PaymentBundle\Service\Payment;
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Collections\Criteria;
 use Oro\Bundle\OrderBundle\Entity\Order;
-use Oro\Bundle\PaymentBundle\Entity\Repository\PaymentTransactionRepository;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
+use Oro\Bundle\PaymentBundle\Provider\PaymentTransactionProvider;
 use Payever\Bundle\PaymentBundle\Service\Helper\CompareHelper;
 use Payever\Bundle\PaymentBundle\Service\Helper\TransactionHelper;
 use Payever\Bundle\PaymentBundle\Service\Management\OrderManager;
 use Payever\Sdk\Payments\Enum\Status;
 use Payever\Sdk\Payments\Http\MessageEntity\RetrievePaymentResultEntity;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 class TransactionStatusService
 {
@@ -24,10 +26,13 @@ class TransactionStatusService
     private EntityManager $entityManager;
 
     /**
-     * @var PaymentTransactionRepository
+     * @var PaymentTransactionProvider
      */
-    private PaymentTransactionRepository $paymentTransactionRepository;
+    private PaymentTransactionProvider $paymentTransactionProvider;
 
+    /**
+     * @var TransactionHelper
+     */
     private TransactionHelper $transactionHelper;
 
     /**
@@ -36,73 +41,98 @@ class TransactionStatusService
     private OrderManager $orderManager;
 
     /**
+     * @var Session
+     */
+    private Session $session;
+
+    /**
      * @var LoggerInterface
      */
     private LoggerInterface $logger;
 
+    /**
+     * Constructor.
+     *
+     * @param EntityManager $entityManager
+     * @param PaymentTransactionProvider $paymentTransactionProvider
+     * @param TransactionHelper $transactionHelper
+     * @param OrderManager $orderManager
+     * @param Session $session
+     * @param LoggerInterface $logger
+     */
     public function __construct(
         EntityManager $entityManager,
-        PaymentTransactionRepository $paymentTransactionRepository,
+        PaymentTransactionProvider $paymentTransactionProvider,
         TransactionHelper $transactionHelper,
         OrderManager $orderManager,
+        Session $session,
         LoggerInterface $logger
     ) {
         $this->entityManager = $entityManager;
-        $this->paymentTransactionRepository = $paymentTransactionRepository;
+        $this->paymentTransactionProvider = $paymentTransactionProvider;
         $this->transactionHelper = $transactionHelper;
         $this->orderManager = $orderManager;
+        $this->session = $session;
         $this->logger = $logger;
     }
 
-    public function persistTransactionStatus(RetrievePaymentResultEntity $payeverPayment)
+    /**
+     * Persist Transaction Status.
+     *
+     * @param RetrievePaymentResultEntity $payeverPayment
+     * @return void
+     * @throws \Doctrine\ORM\Exception\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws \Throwable
+     */
+    public function persistTransactionStatus(RetrievePaymentResultEntity $payeverPayment): void
     {
         $paymentId = $payeverPayment->getId();
-        $orderId = $payeverPayment->getReference();
-
-        /** @var PaymentTransaction $paymentTransaction */
-        $paymentTransaction = $this->getPaymentTransaction($orderId);
-        if (!$paymentTransaction) {
-            throw new \UnexpectedValueException('Payment transaction is missing for Order #' . $orderId);
-        }
-
-        $order = $this->transactionHelper->getOrder($paymentTransaction);
+        $orderReference = (string) $payeverPayment->getReference();
+        $order = $this->transactionHelper->getOrderByIdentifier($orderReference);
         if (!$order) {
             throw new \UnexpectedValueException('Order is not found');
         }
 
-        // Verify transaction amount
-        if (!CompareHelper::areSame((float) $payeverPayment->getTotal(), (float) $paymentTransaction->getAmount())) {
-            // @todo Trigger payment cancel/refund
-            $this->logger->critical(
-                sprintf(
-                    'Transaction amount %s does not match to payment amount %s. Order: %s.',
-                    $payeverPayment->getTotal(),
-                    $paymentTransaction->getAmount(),
-                    $orderId
-                )
-            );
-
-            throw new \UnexpectedValueException('Transaction amount doesn\'t match to order amount.');
+        /** @var PaymentTransaction $paymentTransaction */
+        $paymentTransaction = $this->getInitialTransaction($order);
+        if (!$paymentTransaction) {
+            throw new \UnexpectedValueException('Payment transaction is missing for Order #' . $order->getId());
         }
-
-        $paymentTransaction->setReference($paymentId);
-
-        // Save payment details
-        $this->logger->debug(json_encode($payeverPayment->toArray()));
-        $this->transactionHelper->updateTransactionOptions($paymentTransaction, $payeverPayment->toArray());
 
         // Allocate order items
         $this->orderManager->allocateOrderItems($order);
 
+        // Validate amount
+        $this->validateTransactionAmount(
+            $paymentTransaction,
+            (float) $payeverPayment->getTotal() - (float) $payeverPayment->getPaymentFee()
+        );
+
         switch ($payeverPayment->getStatus()) {
             case Status::STATUS_IN_PROCESS:
             case Status::STATUS_ACCEPTED:
+                // Save payment details
+                $this->transactionHelper->updateTransactionOptions($paymentTransaction, $payeverPayment->toArray());
+
                 $paymentTransaction->setAction(PaymentMethodInterface::AUTHORIZE)
+                    ->setReference($paymentId)
+                    ->setSuccessful(true)
                     ->setActive(true);
+
+                $this->paymentTransactionProvider->savePaymentTransaction($paymentTransaction);
+
                 break;
             case Status::STATUS_PAID:
+                // Save payment details
+                $this->transactionHelper->updateTransactionOptions($paymentTransaction, $payeverPayment->toArray());
+
                 $paymentTransaction->setAction(PaymentMethodInterface::CAPTURE)
+                    ->setReference($paymentId)
+                    ->setSuccessful(true)
                     ->setActive(false);
+
+                $this->paymentTransactionProvider->savePaymentTransaction($paymentTransaction);
 
                 // Mark order items captured
                 $this->orderManager->shipOrderItems(
@@ -111,13 +141,21 @@ class TransactionStatusService
                 );
 
                 break;
-            default:
-                $paymentTransaction->setAction(PaymentMethodInterface::CANCEL);
-                break;
         }
+    }
 
-        $paymentTransaction
-            ->setSuccessful(true);
+    /**
+     * Persist Transaction Status.
+     *
+     * @param PaymentTransaction $paymentTransaction
+     * @return void
+     */
+    public function persistExternalId(PaymentTransaction $paymentTransaction): void
+    {
+        $this->transactionHelper->updateTransactionOptions(
+            $paymentTransaction,
+            [TransactionHelper::FIELD_EXTERNAL_ID => $this->session->get('external_id')]
+        );
     }
 
     /**
@@ -128,10 +166,10 @@ class TransactionStatusService
      * @return bool
      */
     public function shouldRejectNotification(
-        $reference,
+        string $reference,
         int $notificationTimestamp
     ): bool {
-        $paymentTransaction = $this->getPaymentTransaction($reference);
+        $paymentTransaction = $this->getPaymentTransactionByOrderReference($reference);
         if (!$paymentTransaction) {
             throw new \UnexpectedValueException('Payment transaction is missing for Order #' . $reference);
         }
@@ -155,7 +193,7 @@ class TransactionStatusService
         $reference,
         int $notificationTimestamp
     ): void {
-        $paymentTransaction = $this->getPaymentTransaction($reference);
+        $paymentTransaction = $this->getPaymentTransactionByOrderReference($reference);
         if (!$paymentTransaction) {
             throw new \UnexpectedValueException('Payment transaction is missing for Order #' . $reference);
         }
@@ -169,20 +207,67 @@ class TransactionStatusService
         $this->entityManager->flush($paymentTransaction);
     }
 
+    private function validateTransactionAmount(PaymentTransaction $paymentTransaction, float $transactionAmount): void
+    {
+        // Verify transaction amount
+        if (!CompareHelper::areSame($transactionAmount, (float) $paymentTransaction->getAmount())) {
+            // @todo Trigger payment cancel/refund
+            $this->logger->critical(
+                sprintf(
+                    'Transaction amount %s does not match to payment amount %s. Order: %s.',
+                    $transactionAmount,
+                    $paymentTransaction->getAmount(),
+                    $paymentTransaction->getEntityIdentifier()
+                )
+            );
+
+            throw new \UnexpectedValueException('Transaction amount doesn\'t match to order amount.');
+        }
+    }
+
     /**
-     * @todo Filter by purchase type.
-     * @param $orderId
+     * Get Initial Payment Transaction.
      *
+     * @param Order $order
      * @return PaymentTransaction|null
      */
-    private function getPaymentTransaction($orderId): ?PaymentTransaction
+    private function getInitialTransaction(Order $order): ?PaymentTransaction
     {
-        /** @var PaymentTransaction $paymentTransaction */
-        return $this->paymentTransactionRepository->findOneBy(
+        foreach (
             [
-                'entityClass' => Order::class,
-                'entityIdentifier' => $orderId
-            ]
-        );
+                PaymentMethodInterface::PURCHASE,
+                PaymentMethodInterface::AUTHORIZE,
+                PaymentMethodInterface::CAPTURE
+            ] as $action
+        ) {
+            $transactions = $this->paymentTransactionProvider->getPaymentTransactions(
+                $order,
+                [
+                    'action' => $action,
+                    'amount' => (string)round((float) $order->getTotal(), 2)
+                ]
+            );
+            if (count($transactions) > 0) {
+                return array_shift($transactions);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get Payment Transaction by Order Reference.
+     *
+     * @param string $orderReference
+     * @return PaymentTransaction|null
+     */
+    private function getPaymentTransactionByOrderReference(string $orderReference): ?PaymentTransaction
+    {
+        $order = $this->transactionHelper->getOrderByIdentifier($orderReference);
+        if ($order) {
+            return $this->paymentTransactionProvider->getPaymentTransaction($order, [], ['id' => Criteria::ASC]);
+        }
+
+        return null;
     }
 }

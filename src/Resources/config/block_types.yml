@@ -1,0 +1,28 @@
+services:
+  payever.layout.type.success_order:
+    parent: oro_layout.block_type.abstract_configurable
+    calls:
+      - [setOptionsConfig, [{reference: {required: true}}]]
+      - [setName, ['payever_success_order']]
+    tags:
+      - { name: layout.block_type, alias: payever_success_order }
+  payever.layout.type.pending_order:
+    parent: oro_layout.block_type.abstract_configurable
+    calls:
+      - [setOptionsConfig, [{api_order_update_status: {required: true}}]]
+      - [setName, ['payever_pending_order']]
+    tags:
+      - { name: layout.block_type, alias: payever_pending_order }
+  payever.layout.type.payment_page:
+    parent: oro_layout.block_type.abstract_configurable
+    calls:
+      - [setOptionsConfig, [{iframeUrl: {required: true}}]]
+      - [setName, ['payever_payment_page']]
+    tags:
+      - { name: layout.block_type, alias: payever_payment_page }
+  payever.layout.block_type.company_search:
+    parent: oro_layout.block_type.abstract_configurable
+    calls:
+      - [setName, ['payever_company_search']]
+    tags:
+      - { name: layout.block_type, alias: payever_company_search }

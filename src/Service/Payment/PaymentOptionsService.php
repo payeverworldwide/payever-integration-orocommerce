@@ -34,6 +34,7 @@ class PaymentOptionsService
     private DataHelper $dataHelper;
 
     private ConfigManager $configManager;
+    private ConfigManager $configGlobal;
 
     private ManagerRegistry $managerRegistry;
 
@@ -48,6 +49,7 @@ class PaymentOptionsService
         PaymentRulesService $paymentRulesService,
         DataHelper $dataHelper,
         ConfigManager $configManager,
+        ConfigManager $configGlobal,
         ManagerRegistry $managerRegistry,
         EntityManager $entityManager,
         DeleteManager $deleteManager,
@@ -57,12 +59,19 @@ class PaymentOptionsService
         $this->paymentRulesService = $paymentRulesService;
         $this->dataHelper = $dataHelper;
         $this->configManager = $configManager;
+        $this->configGlobal = $configGlobal;
         $this->managerRegistry = $managerRegistry;
         $this->entityManager = $entityManager;
         $this->deleteManager = $deleteManager;
         $this->logger = $logger;
     }
 
+    /**
+     * @return void
+     * @throws \Doctrine\ORM\Exception\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     */
     public function synchronizePaymentOptions()
     {
         // Remove exists channels / transports
@@ -81,9 +90,16 @@ class PaymentOptionsService
         }
 
         $paymentMethods = $this->getPaymentOptions($businessUuid);
+        $b2bCountries = [];
+        $ruleNames = [];
         foreach ($paymentMethods as $paymentMethod) {
-            $currencies = $paymentMethod->getOptions()->getCurrencies();
-            $countries = $paymentMethod->getOptions()->getCountries();
+            $currencies = (array) $paymentMethod->getOptions()->getCurrencies();
+            $countries = (array) $paymentMethod->getOptions()->getCountries();
+
+            $isB2BMethod = (bool) $paymentMethod->isB2BMethod();
+            if ($isB2BMethod) {
+                $this->addB2BCountries($paymentMethod, $b2bCountries);
+            }
 
             $transport = new Transport();
             $transport
@@ -91,8 +107,9 @@ class PaymentOptionsService
                 ->setVariantId($paymentMethod->getVariantId())
                 ->setDescriptionOffer(strip_tags((string) $paymentMethod->getDescriptionOffer()))
                 ->setDescriptionFee(strip_tags((string) $paymentMethod->getDescriptionFee()))
-                ->setIsRedirectMethod($paymentMethod->getIsRedirectMethod())
-                ->setIsSubmitMethod($paymentMethod->getIsSubmitMethod())
+                ->setIsRedirectMethod((bool)$paymentMethod->isRedirectMethod())
+                ->setIsSubmitMethod((bool)$paymentMethod->getIsSubmitMethod())
+                ->setIsB2BMethod($isB2BMethod)
                 ->setInstructionText(strip_tags((string) $paymentMethod->getInstructionText()))
                 ->setThumbnail($paymentMethod->getThumbnail1())
                 ->setCurrencies($currencies)
@@ -118,18 +135,31 @@ class PaymentOptionsService
             $this->entityManager->persist($integration);
             $this->entityManager->flush($integration);
 
+            $paymentName =  $paymentMethod->getName();
+            $variantName = $paymentMethod->getVariantName();
+            if ($variantName) {
+                $paymentName = sprintf("%s-%s", $paymentName, $variantName);
+            }
             // Name localization
             $this->addLocalization(
-                $paymentMethod->getName(),
+                $paymentName,
                 $integration->getTransport()->getId()
             );
 
             $this->logger->debug(
-                'Synchronization: ' . $paymentMethod->getName() . ': ' . (string) $integration->getId()
+                'Synchronization: Added: ' . $paymentName . ': ' . (string) $integration->getId(),
+                [
+                    $currencies,
+                    $countries
+                ]
             );
 
             // Create Payment Method Rule
             $ruleName = $paymentMethod->getPaymentMethod() . ' rule';
+            if (in_array($ruleName, $ruleNames)) {
+                $ruleName = $paymentMethod->getPaymentMethod() . '-' . $paymentMethod->getVariantId() . ' rule';
+            }
+            $ruleNames[] = $ruleName;
             $rules = $this->paymentRulesService->getRules($ruleName);
             foreach ($rules as $rule) {
                 $this->logger->debug('Rule removed: ' . $ruleName);
@@ -141,12 +171,17 @@ class PaymentOptionsService
                 $ruleName,
                 PayeverChannelType::TYPE . '_' . (string) $integration->getId(),
                 $countries,
-                $currencies
+                $currencies,
+                $this->getPaymentMethodExpression($paymentMethod->getShippingAddressEquality())
             );
         }
 
         // Remove workflows
         $this->removeWorkflows();
+
+        // Save B2B countries
+        $this->configGlobal->set('payever_payment.b2b_countries', array_unique(array_values($b2bCountries)));
+        $this->configGlobal->flush();
 
         $this->logger->info('Synchronization has been finished');
     }
@@ -256,5 +291,47 @@ class PaymentOptionsService
     private function getChannelRepository(): ChannelRepository
     {
         return $this->managerRegistry->getRepository('OroIntegrationBundle:Channel');
+    }
+
+    private function getPaymentMethodExpression($shippingAddressEquality): string
+    {
+        return $shippingAddressEquality ? 'shippingAddress.street = billingAddress.street and
+        shippingAddress.street2 = billingAddress.street2 and
+        shippingAddress.city = billingAddress.city and
+        shippingAddress.regionName = billingAddress.regionName and
+        shippingAddress.regionCode = billingAddress.regionCode and
+        shippingAddress.postalCode = billingAddress.postalCode and
+        shippingAddress.countryName = billingAddress.countryName and
+        shippingAddress.countryIso3 = billingAddress.countryIso3 and
+        shippingAddress.countryIso2 = billingAddress.countryIso2
+        ' : '';
+    }
+
+    /**
+     * @param ConvertedPaymentOptionEntity $paymentMethod
+     * @param array $b2bCountries
+     * @return void
+     */
+    private function addB2BCountries(ConvertedPaymentOptionEntity $paymentMethod, array &$b2bCountries): void
+    {
+        $variantOptions = $paymentMethod->getVariantOptions();
+        $variantB2bCountries = $variantOptions ? $variantOptions->getCountries() : [];
+
+        // Use old method as failback
+        if (empty($variantB2bCountries)) {
+            $variantB2bCountries = $paymentMethod->getOptions()->getCountries();
+        }
+
+        $b2bCountries += $variantB2bCountries;
+
+        $this->logger->debug(
+            sprintf(
+                'Found B2B payment method: %s %s(%s). Countries: %s',
+                $paymentMethod->getPaymentMethod(),
+                $paymentMethod->getVariantId(),
+                $paymentMethod->getVariantName(),
+                json_encode($variantB2bCountries)
+            )
+        );
     }
 }

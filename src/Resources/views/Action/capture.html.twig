@@ -1,0 +1,47 @@
+{% extends '@OroAction/Operation/form.html.twig' %}
+
+{% block widget_content_inner %}
+    {% if form is defined %}
+        {{ 'payever.actions.modal.capture_hint'|trans }}
+    {% endif %}
+    {{ parent() }}
+{% endblock %}
+
+{% block form_widget %}
+    {% block oro_order_capture_widget %}
+        <strong>{{ 'payever.actions.modal.total'|trans }}: </strong> {{ form.peShip.currencySymbol.vars.value }} {{ form.peShip.total.vars.value|oro_format_decimal }}<br/>
+        <strong>{{ 'payever.actions.modal.cancelled'|trans }}: </strong> {{ form.peShip.currencySymbol.vars.value }} {{ form.peShip.totalCancelled.vars.value|oro_format_decimal }}<br/>
+        <strong>{{ 'payever.actions.modal.captured'|trans }}: </strong> {{ form.peShip.currencySymbol.vars.value }} {{ form.peShip.totalCaptured.vars.value|oro_format_decimal }}<br/>
+        <strong>{{ 'payever.actions.modal.refunded'|trans }}: </strong> {{ form.peShip.currencySymbol.vars.value }} {{ form.peShip.totalRefunded.vars.value|oro_format_decimal }}<br/>
+
+        <div class="section-content">
+            {% include '@PayeverPayment/Action/captureOrderLines.html.twig' %}
+        </div>
+
+        <div class="row">
+            <label>{{ 'payever.actions.ship.trackingNumber'|trans }}</label>
+            <div class="col-12">
+                {{ form_widget(form.peShip.trackingNumber) }}
+            </div>
+        </div>
+
+        <div class="row">
+            <label>{{ 'payever.actions.ship.trackingUrl'|trans }}</label>
+            <div class="col-12">
+                {{ form_widget(form.peShip.trackingUrl) }}
+            </div>
+        </div>
+
+        <div class="row">
+            <label>{{ 'payever.actions.ship.shippingDate'|trans }}</label>
+            <div class="col-12">
+                {{ form_widget(form.peShip.shippingDate) }}
+            </div>
+        </div>
+    {% endblock %}
+{% endblock %}
+
+{% block form_actions_inner %}
+    <button type="reset" class="btn">{{ 'oro.order.orderdiscount.action.cancel'|trans }}</button>
+    <button type="submit" class="btn btn-primary">{{ 'payever.actions.ship.label'|trans }}</button>
+{% endblock %}

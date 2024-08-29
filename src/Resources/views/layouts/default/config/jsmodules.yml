@@ -1,5 +1,10 @@
 aliases:
     payeverpayment-payever-payment-component$: payeverpayment/js/app/components/payever-payment-component
 dynamic-imports:
+    commons:
+        - payeverpayment/js/app/components/finance-express-product-component
+        - payeverpayment/js/app/components/finance-express-shopping-list-component
+        - payeverpayment/js/app/components/payever-pending-component
+        - payeverpayment/js/app/components/company-search-component
     payeverpayment:
         - payeverpayment-payever-payment-component

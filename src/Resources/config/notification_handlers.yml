@@ -9,10 +9,11 @@ services:
     abstract: true
     arguments:
       - '@doctrine.orm.entity_manager'
-      - '@payever.service.payment.transaction_status_service'
+      - '@oro_payment.provider.payment_transaction'
+      - '@payever.service.helper.order'
+      - '@payever.service.payment.transaction_builder'
       - '@payever.service.management.order'
       - '@payever.service.helper.transaction'
-      - '@oro_payment.provider.payment_transaction'
       - '@payever.service.logger'
 
   payever_payment.notification_handler.ship_items:

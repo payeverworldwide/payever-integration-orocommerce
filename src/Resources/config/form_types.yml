@@ -11,3 +11,35 @@ services:
     class: Payever\Bundle\PaymentBundle\Form\Type\SynchronizeButtonType
     tags:
       - { name: form.type, alias: payever_synchronize_button }
+
+  payever.form.type.order_payment_refund_type:
+    class: Payever\Bundle\PaymentBundle\Form\Type\OrderPaymentRefundType
+    tags:
+      - { name: form.type }
+
+  Payever\Bundle\PaymentBundle\Form\Type\OrderPaymentRefundType:
+    alias: payever.form.type.order_payment_refund_type
+
+  payever.form.type.order_payment_cancel_type:
+    class: Payever\Bundle\PaymentBundle\Form\Type\OrderPaymentCancelType
+    tags:
+      - { name: form.type }
+
+  Payever\Bundle\PaymentBundle\Form\Type\OrderPaymentCancelType:
+    alias: payever.form.type.order_payment_cancel_type
+
+  payever.form.type.order_payment_capture_type:
+    class: Payever\Bundle\PaymentBundle\Form\Type\OrderPaymentCaptureType
+    tags:
+      - { name: form.type }
+
+  Payever\Bundle\PaymentBundle\Form\Type\OrderPaymentCaptureType:
+    alias: payever.form.type.order_payment_capture_type
+
+  payever.form.type.order_payment_item_type:
+    class: Payever\Bundle\PaymentBundle\Form\Type\OrderLineItemType
+    tags:
+      - { name: form.type }
+
+  Payever\Bundle\PaymentBundle\Form\Type\OrderLineItemType:
+    alias: payever.form.type.order_payment_line_item_type

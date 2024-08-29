@@ -1,0 +1,52 @@
+/* @theme: default; */
+
+$payever-suggest-text-color-primary: #464646 !default;
+$payever-suggest-text-color-secondary: #000 !default;
+$payever-suggest-background-color: #feffde !default;
+$payever-suggest-item-hover-background-color: #3875d7 !default;
+$payever-suggest-arrow-border: 1px !default;
+
+.payever-company-autocomplete {
+    border: 1px solid #ebebeb;
+    width: 100%;
+    z-index: 10;
+    background-color: #fff;
+    box-shadow: 0 3px 5px #00000026;
+    border-radius: 0 0 4px 4px;
+    overflow-y: auto;
+    max-height: 410px;
+    display: none;
+}
+
+.payever-company-autocomplete-items,
+.payever-company-autocomplete-item {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.payever-company-autocomplete-item-link {
+    padding: 10px 28px 10px 10px;
+    text-decoration: none;
+    color: $payever-suggest-text-color-primary;
+    display: block;
+    position: relative;
+
+    &:hover {
+        text-decoration: none;
+        color: #fff;
+        background-color: $payever-suggest-item-hover-background-color;
+    }
+}
+
+.payever-company-autocomplete-item-link-secondary-text {
+    color: $payever-suggest-text-color-secondary;
+}
+
+.payever-company-autocomplete-item-link-count {
+    white-space: nowrap;
+}
+
+.payever-company-autocomplete-loading {
+    text-align: center;
+}

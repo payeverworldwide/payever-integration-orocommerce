@@ -17,7 +17,7 @@ class CleanLogsController extends AbstractController
      * @Route("/clean_logs", name="payever_payment_clean_logs")
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function synchronizeAction(
+    public function cleanAction(
         Request $request,
         TranslatorInterface $translator,
         LogCollector $logCollector

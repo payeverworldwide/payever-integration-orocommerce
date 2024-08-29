@@ -17,7 +17,10 @@ class RefundAmountHandler extends NotificationHandlerAbstract implements Handler
     public function execute(NotificationResultEntity $notificationResultEntity): array
     {
         $orderReference = $notificationResultEntity->getReference();
-        $order = $this->transactionHelper->getOrderByID($orderReference);
+        $order = $this->transactionHelper->getOrderByIdentifier($orderReference);
+        if (!$order) {
+            throw new \UnexpectedValueException('Order is not found');
+        }
 
         $paymentId = $notificationResultEntity->getId();
         $this->logger->info(sprintf(
@@ -54,12 +57,13 @@ class RefundAmountHandler extends NotificationHandlerAbstract implements Handler
             $this->entityManager->flush($total);
         }
 
-        $this->registerRefundTransaction(
+        $paymentTransaction = $this->transactionBuilder->registerRefundTransaction(
             $order,
             $paymentId,
             $refundAmount,
             $notificationResultEntity->toArray()
         );
+        $this->logger->info('Transaction has been registered', [$paymentTransaction->getId()]);
 
         $this->logger->info(NotificationRequestProcessor::LOG_PREFIX . ' Refund amount. Amount: ' . $refundAmount);
 

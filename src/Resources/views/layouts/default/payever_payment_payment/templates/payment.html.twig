@@ -1,33 +1,12 @@
-{% extends '@OroUI/Default/index.html.twig' %}
-{% oro_title_set({titleTemplate : "%title%" , params: {'%title%': "Payment in process" }, force : true}) %}
-
-{% block bodyClass %}payever-redirect{% endblock %}
-
-{% block script %}
-{% endblock %}
-
-{% block content_side %}
-{% endblock %}
-
-{% block header %}
-{% endblock %}
-
-{% block right_panel %}
-{% endblock right_panel %}
-{% block left_panel %}
-{% endblock left_panel %}
-
-{% block before_content %}
-{% endblock %}
-
-{% block content %}
+{% block _payever_payment_page_widget %}
     <iframe
             sandbox="allow-same-origin allow-forms allow-top-navigation allow-scripts allow-popups allow-modals allow-popups-to-escape-sandbox"
             id="payever_iframe"
+            allow="payment"
             title="payever"
             width="100%"
             src="{{ iframeUrl }}"
-            style="border:none; min-height: 600px; height: 100%;">
+            style="border:none; min-height: 750px;">
     </iframe>
 
     <script type="text/javascript">
@@ -40,8 +19,9 @@
                         'scrollTop': window.pageYOffset || document.documentElement.scrollTop,
                         'offsetTop': iframe.offsetTop,
                         'windowHeight': window.innerHeight
-                    }
-                    , "*");
+                    },
+                    "*"
+                );
             }
         }
 
@@ -65,18 +45,9 @@
                         break;
                     case 'payeverCheckoutScrollOffsetRequested':
                         sendCheckoutNewScrollOffset();
-
+                        break;
                 }
             }
         }
     </script>
-
-    <script>
-        document.getElementById('progressbar').style.display = 'none';
-        document.getElementById('page').style.display = '';
-        document.title = "{{ oro_title_render()|e('js') }}";
-    </script>
-{% endblock content %}
-
-{% block footer %}
 {% endblock %}

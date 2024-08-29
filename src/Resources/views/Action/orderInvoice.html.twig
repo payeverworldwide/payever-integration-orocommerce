@@ -1,0 +1,12 @@
+{% extends '@OroAction/Operation/form.html.twig' %}
+
+{% block widget_content_inner %}
+    <div class="form-horizontal">
+        {{ parent() }}
+    </div>
+{% endblock %}
+
+{% block form_actions_inner %}
+    <button type="reset" class="btn">{{ 'payever.actions.invoice_pdf.button.cancelText'|trans }}</button>
+    <button type="submit" class="btn btn-primary btn-settle">{{ 'payever.actions.invoice_pdf.button.okText'|trans }}</button>
+{% endblock %}

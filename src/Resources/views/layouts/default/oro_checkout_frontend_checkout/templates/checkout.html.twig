@@ -1,0 +1,17 @@
+{% block _payever_company_search_widget %}
+    {% set attr = layout_attr_defaults(attr, {
+        'data-page-component-module': 'oroui/js/app/components/view-component',
+        '~data-page-component-options': {
+            view: 'payeverpayment/js/app/components/company-search-component',
+            searchUrl: path('payever_payment_company_search'),
+            saveUrl: path('payever_payment_company_save'),
+            enabled: oro_config_value('payever_payment.b2b_company_search'),
+            companySearchType: oro_config_value('payever_payment.b2b_company_search_type'),
+            b2bCountries: oro_config_value('payever_payment.b2b_countries')
+        },
+    }) %}
+
+    <div {{ block('block_attributes') }}>
+        {{ block_widget(block) }}
+    </div>
+{% endblock %}

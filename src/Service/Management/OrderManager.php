@@ -15,6 +15,9 @@ use Payever\Bundle\PaymentBundle\Entity\Repository\OrderTotalsRepository;
 use Payever\Bundle\PaymentBundle\Entity\Repository\OrderItemsRepository;
 use Payever\Bundle\PaymentBundle\Service\Helper\OrderItemHelper;
 
+/**
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ */
 class OrderManager
 {
     /**
@@ -96,6 +99,8 @@ class OrderManager
             ->setCapturedTotal(0)
             ->setCancelledTotal(0)
             ->setRefundedTotal(0)
+            ->setSettledTotal(0)
+            ->setInvoicedTotal(0)
             ->setManual(false);
 
         $this->entityManager->persist($orderTotal);
@@ -260,6 +265,32 @@ class OrderManager
     }
 
     /**
+     * Add settled amount.
+     * @param Order $order
+     * @param float $amount
+     * @param bool $isManual
+     *
+     * @return void
+     * @throws \Doctrine\ORM\Exception\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     */
+    public function addSettledAmount(Order $order, float $amount, bool $isManual)
+    {
+        $orderTotal = $this->getOrderTotalsRepository()->findByOrder($order);
+        if (!$orderTotal) {
+            throw new \Exception('Order totals is not found.');
+        }
+
+        $orderTotal->setSettledTotal($orderTotal->getSettledTotal() + $amount);
+        if ($isManual) {
+            $orderTotal->setManual(true);
+        }
+
+        $this->entityManager->persist($orderTotal);
+        $this->entityManager->flush($orderTotal);
+    }
+
+    /**
      * Mark Order items cancelled.
      *
      * @param Order $order
@@ -356,6 +387,32 @@ class OrderManager
     }
 
     /**
+     * Add refunded amount.
+     * @param Order $order
+     * @param float $amount
+     * @param bool $isManual
+     *
+     * @return void
+     * @throws \Doctrine\ORM\Exception\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     */
+    public function addInvoicedAmount(Order $order, float $amount, bool $isManual)
+    {
+        $orderTotal = $this->getOrderTotalsRepository()->findByOrder($order);
+        if (!$orderTotal) {
+            throw new \Exception('Order totals is not found.');
+        }
+
+        $orderTotal->setInvoicedTotal($orderTotal->getInvoicedTotal() + $amount);
+        if ($isManual) {
+            $orderTotal->setManual(true);
+        }
+
+        $this->entityManager->persist($orderTotal);
+        $this->entityManager->flush($orderTotal);
+    }
+
+    /**
      * Get available cancel amount.
      *
      * @param Order $order
@@ -404,6 +461,23 @@ class OrderManager
         }
 
         return $orderTotal->getCapturedTotal() - $orderTotal->getRefundedTotal();
+    }
+
+    /**
+     * Get available refund amount.
+     *
+     * @param Order $order
+     *
+     * @return float
+     */
+    public function getAvailableInvoicedAmount(Order $order): float
+    {
+        $orderTotal = $this->getOrderTotalsRepository()->findByOrder($order);
+        if (!$orderTotal) {
+            return 0;
+        }
+
+        return $orderTotal->getCapturedTotal() - $orderTotal->getInvoicedTotal();
     }
 
     private function getOrderItemsRepository(): OrderItemsRepository

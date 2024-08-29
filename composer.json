@@ -16,10 +16,11 @@
         "php":">=8.2.0",
         "ext-zip": "*",
         "oro/commerce": "5.1.*",
-        "payever/core-sdk-php": "1.1.6",
-        "payever/plugins-sdk-php": "1.2.0",
-        "payever/payments-sdk-php": "1.2.4",
-        "payever/products-sdk-php": "1.1.0"
+        "payever/core-sdk-php": "2.1.0",
+        "payever/plugins-sdk-php": "2.0.0",
+        "payever/payments-sdk-php": "2.5.0",
+        "payever/products-sdk-php": "2.0.0",
+        "setasign/fpdf": "^1.8"
     },
     "suggest": {
         "ext-bcmath": "If you want to use bcmath functions"

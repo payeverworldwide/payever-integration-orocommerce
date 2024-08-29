@@ -1,0 +1,13 @@
+layout:
+    actions:
+        - '@setBlockTheme':
+            themes:
+                - '@PayeverPayment/layouts/default/oro_checkout_frontend_checkout/templates/checkout.html.twig'
+
+        - '@add':
+            id: payever_company_search
+            parentId: page_content
+            blockType: payever_company_search
+            prepend: true
+
+    conditions: 'context["workflowStepName"]=="enter_billing_address"'

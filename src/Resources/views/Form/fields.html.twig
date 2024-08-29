@@ -97,3 +97,30 @@
 {% block payever_clean_logs_errors %}
 
 {% endblock %}
+
+{% block payever_finance_express_configuration %}
+    {{ form_widget(form) }}
+{% endblock %}
+
+{% block payever_finance_express_configuration_widget %}
+    {% set options = {
+        url: path('payever_payment_get_finance_express_widgets'),
+        saveUrl: path('payever_payment_save_widget'),
+        target: '.fe_widget_id'
+    } %}
+    <div data-page-component-module="payeverpayment/js/app/components/finance-express-configuration-component"
+         data-page-component-options="{{ options|json_encode }}">
+        <label for="fe_widget_id">
+            {{ 'payever.system_configuration.fields.fe_widget_id.label'|trans({}, translation_domain) }}
+            <input type="text" class="fe_widget_id" id="fe_widget_id">
+        </label>
+    </div>
+{% endblock %}
+
+{% block payever_finance_express_configuration_row %}
+    {{ block('button_row') }}
+{% endblock %}
+
+{% block payever_finance_express_configuration_errors %}
+
+{% endblock %}

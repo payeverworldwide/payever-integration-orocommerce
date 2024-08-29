@@ -1,0 +1,14 @@
+layout:
+    actions:
+        - '@setBlockTheme':
+            themes: 'fe_shopping_list.html.twig'
+
+        - '@add':
+            id: fe_shopping_list
+            parentId: checkout_container
+            blockType: block
+            options:
+                visible: =data["payever_finance_express_data_layer"].isVisibleOnCart()
+                vars:
+                    shoppingLists: '=data["oro_shopping_list_customer_user_shopping_lists"].getShoppingListsForWidget()'
+                    settings: =data["payever_finance_express_data_layer"].getSettingsForCart()

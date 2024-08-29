@@ -14,6 +14,7 @@ class PayeverConfig extends AbstractParameterBagPaymentConfig implements Payever
     public const DESCRIPTION_FEE = 'description_fee';
     public const IS_REDIRECT_METHOD = 'is_redirect_method';
     public const IS_SUBMIT_METHOD = 'is_submit_method';
+    public const IS_B2B_METHOD = 'is_b2b_method';
     public const INSTRUCTION_TEXT = 'instruction_text';
     public const THUMBNAIL = 'thumbnail';
     public const ALLOWED_CURRENCIES = 'currencies';
@@ -56,6 +57,11 @@ class PayeverConfig extends AbstractParameterBagPaymentConfig implements Payever
         return (bool) $this->get(self::IS_SUBMIT_METHOD);
     }
 
+    public function getIsB2BMethod(): bool
+    {
+        return (bool) $this->get(self::IS_B2B_METHOD);
+    }
+
     public function getInstructionText(): string
     {
         return (string) $this->get(self::INSTRUCTION_TEXT);
@@ -68,8 +74,14 @@ class PayeverConfig extends AbstractParameterBagPaymentConfig implements Payever
 
     public function getAllowedCurrencies(): array
     {
-        $result = (string) $this->get(self::ALLOWED_CURRENCIES);
+        $result = $this->get(self::ALLOWED_CURRENCIES);
+
+        if (is_array($result)) {
+            return $result;
+        }
+
         $result = json_decode($result);
+
         if (JSON_ERROR_NONE === json_last_error()) {
             return $result;
         }
@@ -79,8 +91,14 @@ class PayeverConfig extends AbstractParameterBagPaymentConfig implements Payever
 
     public function getAllowedCountries(): array
     {
-        $result = (string) $this->get(self::ALLOWED_COUNTRIES);
+        $result = $this->get(self::ALLOWED_COUNTRIES);
+
+        if (is_array($result)) {
+            return $result;
+        }
+
         $result = json_decode($result);
+
         if (JSON_ERROR_NONE === json_last_error()) {
             return $result;
         }

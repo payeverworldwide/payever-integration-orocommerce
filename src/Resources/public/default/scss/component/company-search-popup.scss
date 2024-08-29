@@ -1,0 +1,453 @@
+.xmark-icon {
+    height: 14.2px;
+    width: 14.2px;
+    position: relative;
+}
+
+.selection-modal-header,
+.xmark {
+    display: flex;
+    flex-direction: row;
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+.xmark {
+    flex: 1;
+    overflow: hidden;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 7px 0;
+}
+
+.xmark svg {
+    cursor: pointer;
+}
+
+.xmark span {
+    flex: auto;
+    font-size: 15px;
+    line-height: 16px;
+    font-weight: 550;
+    text-align: center;
+}
+
+.selection-modal-header {
+    align-self: stretch;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 0 0 5px;
+}
+
+.payever-mark {
+    height: 20px;
+    width: 20px;
+    position: relative;
+    border-radius: 23.25px;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1px solid #d0d0d0;
+    box-sizing: border-box;
+}
+
+.payever-company-title {
+    position: relative;
+    display: inline-block;
+    min-width: 92px;
+}
+
+.payever-company-address {
+    position: relative;
+    font-size: 10px;
+    color: #8e8e8e;
+}
+
+.payever-company-address-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 3px;
+}
+
+.download-buttons,
+.download-links,
+.download-links-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.download-buttons {
+    gap: 12px;
+}
+
+.download-buttons .radio-btn {
+    display: none;
+}
+
+.download-buttons .radio-btn:checked + .payever-mark{
+    background: black url(img/mark.svg) no-repeat;
+    background-position: center;
+    border-color: black;
+}
+
+.download-links,
+.download-links-wrapper {
+    align-self: stretch;
+    padding: 10.5px 0;
+}
+
+.download-links-wrapper {
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0 17px;
+}
+
+.download-1-2 {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    border-radius: 23.25px;
+    border: 1px solid #d0d0d0;
+    box-sizing: border-box;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.download-1-2-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 5.5px 0 0;
+}
+
+.morendo-it-gmbh {
+    position: relative;
+    display: inline-block;
+    min-width: 115px;
+}
+
+.chemnitzer-str-20 {
+    position: relative;
+    font-size: 10px;
+    color: #8e8e8e;
+}
+
+.alternative-companies,
+.frame-parent {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 3px;
+}
+
+.frame-parent {
+    align-self: stretch;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    flex-direction: row;
+    padding: 9px 18px;
+    gap: 12px;
+}
+
+.download-1-21 {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    border-radius: 23.25px;
+    border: 1px solid #d0d0d0;
+    box-sizing: border-box;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.download-1-2-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 5.5px 0 0;
+}
+
+.morenta-gmbh {
+    position: relative;
+    display: inline-block;
+    min-width: 100px;
+}
+
+.gugelstr-130-90458 {
+    position: relative;
+    font-size: 10px;
+    color: #8e8e8e;
+}
+
+.frame-group,
+.morenta-gmbh-parent {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 3px;
+}
+
+.frame-group {
+    align-self: stretch;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    flex-direction: row;
+    padding: 9px 18px;
+    gap: 12px;
+}
+
+.download-1-22 {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    border-radius: 23.25px;
+    border: 1px solid #d0d0d0;
+    box-sizing: border-box;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.download-1-2-frame {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 5.5px 0 0;
+}
+
+.mirando-gmbh {
+    position: relative;
+    display: inline-block;
+    min-width: 95px;
+}
+
+.grabenstr-149a-4757 {
+    position: relative;
+    font-size: 10px;
+    color: #8e8e8e;
+}
+
+.frame-container,
+.mirando-gmbh-parent {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 3px;
+}
+
+.frame-container {
+    align-self: stretch;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    flex-direction: row;
+    padding: 9px 18px;
+    gap: 12px;
+}
+
+.download-1-23 {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    border-radius: 23.25px;
+    border: 1px solid #d0d0d0;
+    box-sizing: border-box;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.download-1-2-wrapper1 {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 5.5px 0 0;
+}
+
+.mehrondo-gmbh {
+    position: relative;
+    display: inline-block;
+    min-width: 107px;
+}
+
+.philippine-welser-str-11-861 {
+    position: relative;
+    font-size: 10px;
+    color: #8e8e8e;
+}
+
+.payever-company-input,
+.frame-div,
+.mehrondo-gmbh-parent {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+.mehrondo-gmbh-parent {
+    flex-direction: column;
+    gap: 3px;
+}
+
+.payever-company-input,
+.frame-div {
+    align-self: stretch;
+}
+
+.frame-div {
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    flex-direction: row;
+    padding: 9px 18px;
+    gap: 12px;
+}
+
+.payever-company-input {
+    flex-direction: column;
+    gap: 10px;
+}
+
+.apply {
+    position: relative;
+    font-size: 15px;
+    line-height: 16px;
+    font-weight: 550;
+    color: #fff;
+    text-align: left;
+    display: inline-block;
+    min-width: 38px;
+}
+
+.apply-options {
+    cursor: pointer;
+    border: 0;
+    padding: 12px 20px;
+    background-color: #333;
+    align-self: stretch;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.apply-options:hover {
+    background-color: #595959;
+}
+
+.proceed {
+    color: #3378f6;
+}
+
+.i-did-not-container {
+    position: relative;
+    line-height: 16px;
+    white-space: wrap;
+}
+
+.apply-button,
+.apply-options1 {
+    align-self: stretch;
+    display: flex;
+}
+
+.apply-options1 {
+    border: none;
+    border-radius: 8px;
+    background-color: #f5f5f7;
+    overflow: hidden;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    white-space: nowrap;
+}
+
+.apply-button {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+.payever-icon {
+    display: inline-block;
+    width: 134.5px;
+    height: 16px;
+    position: relative;
+    background: url(img/payever.svg) no-repeat;
+}
+
+.apply-button-parent {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 20px;
+    color: #000;
+}
+
+.payever-company-selection-modal,
+.footer {
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+    box-sizing: border-box;
+}
+
+.payever-company-selection-modal {
+    width: 529px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(50px);
+    border-radius: 20px;
+    background-color: #fff;
+    flex-shrink: 0;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 30px 25px 40px;
+    gap: 15px;
+    max-width: 100%;
+}
+
+.payever-modal-dialog {
+    max-width: max-content;
+}
+
+.payever-company-autocomplete-items-for-popup {
+    display: none;
+}
+
+.footer {
+    width: 100%;
+    height: 1024px;
+    position: relative;
+    background-color: rgba(0, 0, 0, 0.15);
+    flex-direction: row;
+    justify-content: center;
+    padding: 163px 20px 313.8px 21px;
+    line-height: normal;
+    letter-spacing: normal;
+    text-align: left;
+    font-size: 14px;
+    color: #3a3a3a;
+    font-family: Roboto;
+}
+
+@media screen and (max-width: 547px) {
+    .payever-company-selection-modal {
+        padding-bottom: 26px;
+        box-sizing: border-box;
+    }
+}

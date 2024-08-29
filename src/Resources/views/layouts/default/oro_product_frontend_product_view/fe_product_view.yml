@@ -1,0 +1,15 @@
+layout:
+    actions:
+        - '@setBlockTheme':
+            themes: 'fe_product_view.html.twig'
+
+        - '@add':
+            id: fe_product_view
+            parentId: product_view_primary_wrapper
+            blockType: block
+            options:
+                visible: =data["payever_finance_express_data_layer"].isVisibleOnProduct()
+                vars:
+                    product: '=data["oro_product_variant"].getProductVariantOrProduct(data)'
+                    productPrices: '=data["frontend_product_prices"].getByProduct(data["oro_product_variant"].getProductVariantOrProduct(data))'
+                    settings: =data["payever_finance_express_data_layer"].getSettingsForProduct()

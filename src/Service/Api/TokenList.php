@@ -7,7 +7,6 @@ namespace Payever\Bundle\PaymentBundle\Service\Api;
 use Oro\Bundle\ConfigBundle\Config\ConfigManager;
 use Payever\Sdk\Core\Authorization\OauthToken;
 use Payever\Sdk\Core\Authorization\OauthTokenList;
-use phpDocumentor\Reflection\File;
 
 class TokenList extends OauthTokenList
 {

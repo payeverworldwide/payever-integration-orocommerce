@@ -5,11 +5,27 @@ declare(strict_types=1);
 namespace Payever\Bundle\PaymentBundle\Service\Payment\Action;
 
 use Oro\Bundle\OrderBundle\Entity\Order;
-use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
-use Payever\Sdk\Core\Base\ResponseInterface;
 use Payever\Sdk\Core\Http\ResponseEntity;
 
 interface ActionInterface
 {
-    public function execute(Order $order, string $paymentId, $amount = null): ResponseEntity;
+    /**
+     * Execute action by amount.
+     *
+     * @param Order $order
+     * @param float|null $amount
+     *
+     * @return ResponseEntity
+     */
+    public function execute(Order $order, ?float $amount): ResponseEntity;
+
+    /**
+     * Execute action by item.
+     *
+     * @param Order $order
+     * @param array $items
+     *
+     * @return ResponseEntity
+     */
+    public function executeItems(Order $order, array $items): ResponseEntity;
 }

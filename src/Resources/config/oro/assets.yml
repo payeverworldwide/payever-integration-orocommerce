@@ -1,3 +1,4 @@
 css:
   inputs:
     - 'bundles/payeverpayment/css/admin.scss'
+    - 'bundles/payeverpayment/css/pending.css'
