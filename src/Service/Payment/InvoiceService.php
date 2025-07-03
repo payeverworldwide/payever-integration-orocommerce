@@ -147,7 +147,7 @@ class InvoiceService
      */
     private function createInvoiceFile(Order $order, array $params = []): File
     {
-        $number = $params[self::INVOICE_NUMBER] ?? $this->getNextOrderInvoiceNumber();
+        $number = $params[self::INVOICE_NUMBER] ?? (string)$this->getNextOrderInvoiceNumber();
         $date = $params[self::INVOICE_DATE] ?? $this->getOrderInvoiceDate();
         $comment = $params[self::INVOICE_COMMENT] ?? '';
 

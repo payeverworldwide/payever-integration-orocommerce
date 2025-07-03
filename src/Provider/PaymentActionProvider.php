@@ -7,7 +7,6 @@ namespace Payever\Bundle\PaymentBundle\Provider;
 use Oro\Bundle\LocaleBundle\Twig\LocaleExtension;
 use Oro\Bundle\OrderBundle\Entity\Order;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
-use Payever\Bundle\PaymentBundle\Form\Entity\OrderClaim;
 use Payever\Bundle\PaymentBundle\Form\Entity\OrderLineItem;
 use Payever\Bundle\PaymentBundle\Form\Entity\OrderPayment;
 use Payever\Bundle\PaymentBundle\Service\Helper\OrderHelper;
@@ -544,14 +543,13 @@ class PaymentActionProvider
     public function processInvoicePdf(Form $form): array
     {
         /** @var Order $order */
-        $paymentTransaction = $form->getData()->data;
-        $orderId = $paymentTransaction->getEntityIdentifier();
+        $order = $form->getData()->data;
+        $orderId = $order->getIdentifier();
 
         $this->logger->info('processInvoiceForm', [$orderId]);
 
-        $order = $this->orderHelper->getOrderByID($orderId);
         $paymentId = $this->orderHelper->getPaymentId($order);
-        $externalId = $this->orderHelper->getExternalId($order);
+        $externalId = $order->getBillingAddress()->getPayeverExternalId();
 
         $params = [
             InvoiceService::INVOICE_NUMBER => $form->getData()->invoiceNumber,
@@ -565,7 +563,7 @@ class PaymentActionProvider
         try {
             $this->invoiceService->createInvoice($order, $params);
 
-            $this->logger->info('Invoice document has been created', [$paymentTransaction->getId()]);
+            $this->logger->info('Invoice document has been created', [$order->getId()]);
         } catch (\Exception $exception) {
             $this->logger->critical('processInvoiceForm Exception: ' . $exception->getMessage());
             $this->lock->releaseLock($paymentId);

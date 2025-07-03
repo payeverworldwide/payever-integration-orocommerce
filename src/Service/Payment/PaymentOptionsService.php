@@ -8,6 +8,8 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\Persistence\ManagerRegistry;
 use Oro\Bundle\ConfigBundle\Config\ConfigManager;
 use Oro\Bundle\CheckoutBundle\Entity\CheckoutWorkflowState;
+use Oro\Bundle\EntityBundle\ORM\DoctrineHelper;
+use Oro\Bundle\IntegrationBundle\Entity\Channel;
 use Oro\Bundle\IntegrationBundle\Entity\Channel as Integration;
 use Oro\Bundle\IntegrationBundle\Entity\Repository\ChannelRepository;
 use Oro\Bundle\IntegrationBundle\Manager\DeleteManager;
@@ -39,11 +41,25 @@ class PaymentOptionsService
     private ManagerRegistry $managerRegistry;
 
     private EntityManager $entityManager;
+    private DoctrineHelper $doctrineHelper;
 
     private DeleteManager $deleteManager;
 
     private LoggerInterface $logger;
 
+    /**
+     * @param ServiceProvider $serviceProvider
+     * @param PaymentRulesService $paymentRulesService
+     * @param DataHelper $dataHelper
+     * @param ConfigManager $configManager
+     * @param ConfigManager $configGlobal
+     * @param ManagerRegistry $managerRegistry
+     * @param EntityManager $entityManager
+     * @param DoctrineHelper $doctrineHelper
+     * @param DeleteManager $deleteManager
+     * @param LoggerInterface $logger
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+     */
     public function __construct(
         ServiceProvider $serviceProvider,
         PaymentRulesService $paymentRulesService,
@@ -52,6 +68,7 @@ class PaymentOptionsService
         ConfigManager $configGlobal,
         ManagerRegistry $managerRegistry,
         EntityManager $entityManager,
+        DoctrineHelper $doctrineHelper,
         DeleteManager $deleteManager,
         LoggerInterface $logger
     ) {
@@ -62,6 +79,7 @@ class PaymentOptionsService
         $this->configGlobal = $configGlobal;
         $this->managerRegistry = $managerRegistry;
         $this->entityManager = $entityManager;
+        $this->doctrineHelper = $doctrineHelper;
         $this->deleteManager = $deleteManager;
         $this->logger = $logger;
     }
@@ -114,7 +132,7 @@ class PaymentOptionsService
                 ->setThumbnail($paymentMethod->getThumbnail1())
                 ->setCurrencies($currencies)
                 ->setCountries($countries)
-                ->setIsShippingAddressAllowed($paymentMethod->getShippingAddressEquality())
+                ->setIsShippingAddressAllowed($paymentMethod->getShippingAddressAllowed())
                 ->setIsShippingAddressEquality($paymentMethod->getShippingAddressEquality())
                 ->setMax($paymentMethod->getMax())
                 ->setMin($paymentMethod->getMin())
@@ -140,6 +158,7 @@ class PaymentOptionsService
             if ($variantName) {
                 $paymentName = sprintf("%s-%s", $paymentName, $variantName);
             }
+            // @codeCoverageIgnoreStart
             // Name localization
             $this->addLocalization(
                 $paymentName,
@@ -174,6 +193,7 @@ class PaymentOptionsService
                 $currencies,
                 $this->getPaymentMethodExpression($paymentMethod->getShippingAddressEquality())
             );
+            // @codeCoverageIgnoreEnd
         }
 
         // Remove workflows
@@ -214,6 +234,7 @@ class PaymentOptionsService
      * @return void
      * @throws \Doctrine\ORM\Exception\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
+     * @codeCoverageIgnore
      */
     private function addLocalization(string $string, int $transportId)
     {
@@ -251,6 +272,10 @@ class PaymentOptionsService
         $statement->execute();
     }
 
+    /**
+     * @return void
+     * @codeCoverageIgnore
+     */
     private function removeWorkflows(): void
     {
         $repository = $this->managerRegistry
@@ -268,6 +293,10 @@ class PaymentOptionsService
         }
     }
 
+    /**
+     * @return User
+     * @codeCoverageIgnore
+     */
     private function getDefaultUserOwner(): User
     {
         return $this->getUserRepository()->findOneBy([], ['id' => 'ASC']);
@@ -275,12 +304,16 @@ class PaymentOptionsService
 
     /**
      * @return object
+     * @codeCoverageIgnore
      */
     protected function getConnection()
     {
         return $this->managerRegistry->getConnection();
     }
 
+    /**
+     * @return UserRepository
+     */
     private function getUserRepository(): UserRepository
     {
         return $this->managerRegistry
@@ -288,11 +321,19 @@ class PaymentOptionsService
             ->getRepository(User::class);
     }
 
+    /**
+     * @return ChannelRepository
+     */
     private function getChannelRepository(): ChannelRepository
     {
-        return $this->managerRegistry->getRepository('OroIntegrationBundle:Channel');
+        return $this->doctrineHelper->getEntityRepository(Channel::class);
     }
 
+    /**
+     * @param $shippingAddressEquality
+     * @return string
+     * @codeCoverageIgnore
+     */
     private function getPaymentMethodExpression($shippingAddressEquality): string
     {
         return $shippingAddressEquality ? 'shippingAddress.street = billingAddress.street and
@@ -311,6 +352,7 @@ class PaymentOptionsService
      * @param ConvertedPaymentOptionEntity $paymentMethod
      * @param array $b2bCountries
      * @return void
+     * @codeCoverageIgnore
      */
     private function addB2BCountries(ConvertedPaymentOptionEntity $paymentMethod, array &$b2bCountries): void
     {

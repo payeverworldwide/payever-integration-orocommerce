@@ -1,0 +1,5 @@
+{% block _payever_external_id_widget %}
+    {% if form.billing_address.payever_external_id is defined %}
+        {{ form_row(form.billing_address.payever_external_id) }}
+    {% endif %}
+{% endblock %}

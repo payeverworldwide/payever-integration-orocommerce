@@ -25,7 +25,7 @@ class TokenList extends OauthTokenList
      */
     public function load()
     {
-        $savedTokens = $this->configManager->get('payever_payment.oauth_token', '{}');
+        $savedTokens = $this->configManager->get('payever_payment.oauth_token');
         $savedTokens = is_string($savedTokens) ? json_decode($savedTokens, true) : null;
 
         if (is_array($savedTokens)) {

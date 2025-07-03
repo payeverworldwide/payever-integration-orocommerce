@@ -14,7 +14,6 @@ use Oro\Bundle\PaymentBundle\Provider\PaymentTransactionProvider;
 class TransactionHelper
 {
     public const FIELD_ID = 'id';
-    public const FIELD_EXTERNAL_ID = 'external_id';
 
     private Registry $doctrine;
     private DoctrineHelper $doctrineHelper;
@@ -121,23 +120,6 @@ class TransactionHelper
         $additionalData = $this->getTransactionAdditionalData($paymentTransaction);
         if (isset($additionalData[self::FIELD_ID])) {
             return $additionalData[self::FIELD_ID];
-        }
-
-        return null;
-    }
-
-    /**
-     * Get Payment ID.
-     *
-     * @param PaymentTransaction $paymentTransaction
-     *
-     * @return null|string
-     */
-    public function getExternalId(PaymentTransaction $paymentTransaction): ?string
-    {
-        $additionalData = $this->getTransactionAdditionalData($paymentTransaction);
-        if (isset($additionalData[self::FIELD_EXTERNAL_ID])) {
-            return $additionalData[self::FIELD_EXTERNAL_ID];
         }
 
         return null;

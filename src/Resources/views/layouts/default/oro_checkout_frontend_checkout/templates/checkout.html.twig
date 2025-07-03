@@ -4,10 +4,12 @@
         '~data-page-component-options': {
             view: 'payeverpayment/js/app/components/company-search-component',
             searchUrl: path('payever_payment_company_search'),
+            companyRetrieveUrl: path('payever_payment_company_retrieve'),
             saveUrl: path('payever_payment_company_save'),
             enabled: oro_config_value('payever_payment.b2b_company_search'),
             companySearchType: oro_config_value('payever_payment.b2b_company_search_type'),
-            b2bCountries: oro_config_value('payever_payment.b2b_countries')
+            b2bCountries: oro_config_value('payever_payment.b2b_countries'),
+            defaultCountry: oro_config_value('oro_locale.country')
         },
     }) %}
 

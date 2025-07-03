@@ -8,9 +8,11 @@ use Payever\Bundle\PaymentBundle\Service\Api\ServiceProvider;
 use Payever\Bundle\PaymentBundle\Service\Helper\AddressHelper;
 use Payever\Sdk\Payments\Http\MessageEntity\CompanySearchResultEntity;
 use Payever\Sdk\Payments\Http\RequestEntity\CompanySearch\AddressEntity;
+use Payever\Sdk\Payments\Http\RequestEntity\CompanySearch\CompanyCustomEntity;
 use Payever\Sdk\Payments\Http\RequestEntity\CompanySearch\CompanyEntity;
 use Payever\Sdk\Payments\Http\RequestEntity\CompanySearchRequest;
 use Payever\Sdk\Payments\Http\ResponseEntity\CompanySearchResponse;
+use Payever\Sdk\Core\Http\ResponseEntity;
 
 class SearchService
 {
@@ -75,5 +77,39 @@ class SearchService
         }
 
         return $results;
+    }
+
+    /**
+     * @param string $companyIdentifier
+     * @param string $type
+     * @param string $country
+     * @return array
+     * @throws \Exception
+     */
+    public function retrieveCompany(string $companyIdentifier, string $type, string $country = ''): array
+    {
+        $companyCustomEntity = new CompanyCustomEntity();
+        $companyCustomEntity
+            ->setValue($companyIdentifier)
+            ->setType($type);
+
+        $companySearchEntity = new CompanyEntity();
+        $companySearchEntity->setCustom($companyCustomEntity);
+
+        $companySearchRequest = new CompanySearchRequest();
+        $companySearchRequest->setCompany($companySearchEntity);
+
+        $addressEntity = new AddressEntity();
+        $addressEntity->setCountry($country);
+
+        $companySearchRequest->setAddress($addressEntity);
+
+        $paymentsApiClient = $this->serviceProvider->getPaymentsApiClient();
+
+        return $paymentsApiClient
+            ->searchCompany($companySearchRequest)
+            ->getResponseEntity()
+            ->getResult()
+            ->toArray();
     }
 }

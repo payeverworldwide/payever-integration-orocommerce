@@ -7,6 +7,7 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Oro\Bundle\ConfigBundle\Config\ConfigManager;
 use Oro\Bundle\CurrencyBundle\Provider\CurrencyProviderInterface;
+use Oro\Bundle\EntityBundle\ORM\DoctrineHelper;
 use Oro\Bundle\PaymentBundle\Entity\PaymentMethodConfig;
 use Oro\Bundle\PaymentBundle\Entity\PaymentMethodsConfigsRule;
 use Oro\Bundle\PaymentBundle\Entity\PaymentMethodsConfigsRuleDestination;
@@ -27,6 +28,8 @@ class PaymentRulesService
 
     private EntityManager $entityManager;
 
+    private DoctrineHelper $doctrineHelper;
+
     protected CurrencyProviderInterface $currencyProvider;
 
     private LoggerInterface $logger;
@@ -36,6 +39,7 @@ class PaymentRulesService
         ConfigManager $configManager,
         ManagerRegistry $managerRegistry,
         EntityManager $entityManager,
+        DoctrineHelper $doctrineHelper,
         CurrencyProviderInterface $currencyProvider,
         LoggerInterface $logger
     ) {
@@ -43,6 +47,7 @@ class PaymentRulesService
         $this->configManager = $configManager;
         $this->managerRegistry = $managerRegistry;
         $this->entityManager = $entityManager;
+        $this->doctrineHelper = $doctrineHelper;
         $this->currencyProvider = $currencyProvider;
         $this->logger = $logger;
     }
@@ -149,7 +154,7 @@ class PaymentRulesService
 
     private function getCountryRepository(): CountryRepository
     {
-        return $this->managerRegistry->getRepository('OroAddressBundle:Country');
+        return $this->doctrineHelper->getEntityRepository(Country::class);
     }
 
     private function getCountry($iso2Code): ?Country

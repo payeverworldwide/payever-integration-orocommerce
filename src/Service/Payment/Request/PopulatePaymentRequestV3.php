@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Payever\Bundle\PaymentBundle\Service\Payment\Request;
 
+use Oro\Bundle\ConfigBundle\Config\ConfigManager;
 use Oro\Bundle\CustomerBundle\Entity\CustomerUser;
 use Oro\Bundle\CustomerBundle\Provider\CustomerUserLoggingInfoProvider;
 use Oro\Bundle\EntityBundle\ORM\DoctrineHelper;
@@ -23,13 +24,10 @@ use Payever\Sdk\Core\Enum\ChannelSet;
 use Payever\Sdk\Core\Enum\ChannelTypeSet;
 use Payever\Sdk\Core\Http\RequestEntity;
 use Payever\Sdk\Payments\Enum\Status;
-use Payever\Sdk\Payments\Http\MessageEntity\AttributesEntity;
-use Payever\Sdk\Payments\Http\MessageEntity\CartItemV3Entity;
 use Payever\Sdk\Payments\Http\MessageEntity\ChannelEntity;
 use Payever\Sdk\Payments\Http\MessageEntity\CompanyEntity;
 use Payever\Sdk\Payments\Http\MessageEntity\CustomerAddressEntity as AddressEntity;
 use Payever\Sdk\Payments\Http\MessageEntity\CustomerEntity;
-use Payever\Sdk\Payments\Http\MessageEntity\DimensionsEntity;
 use Payever\Sdk\Payments\Http\MessageEntity\PaymentDataEntity;
 use Payever\Sdk\Payments\Http\MessageEntity\PurchaseEntity;
 use Payever\Sdk\Payments\Http\MessageEntity\ShippingOptionEntity;
@@ -38,7 +36,7 @@ use Payever\Sdk\Payments\Http\MessageEntity\UrlsEntity;
 use Payever\Sdk\Payments\Http\RequestEntity\CreatePaymentV3Request;
 use Payever\Sdk\Payments\Http\RequestEntity\SubmitPaymentRequestV3;
 use Payever\Sdk\Payments\Http\ResponseEntity\RetrievePaymentResponse;
-use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -51,6 +49,8 @@ class PopulatePaymentRequestV3
     private const CUSTOMER_TYPE_ORGANIZATION = 'organization';
 
     private ServiceProvider $serviceProvider;
+
+    private ConfigManager $configManager;
 
     private DataHelper $dataHelper;
 
@@ -69,7 +69,7 @@ class PopulatePaymentRequestV3
 
     private CustomerUserLoggingInfoProvider $customerUserLoggingInfoProvider;
 
-    private Session $session;
+    private RequestStack $requestStack;
 
     /**
      * @var PayeverConfigInterface
@@ -78,6 +78,7 @@ class PopulatePaymentRequestV3
 
     public function __construct(
         ServiceProvider $serviceProvider,
+        ConfigManager $configManager,
         DataHelper $dataHelper,
         UrlHelper $urlHelper,
         OrderItemHelper $orderItemHelper,
@@ -85,9 +86,10 @@ class PopulatePaymentRequestV3
         TransactionStatusService $transactionStatusService,
         PaymentTransactionProvider $paymentTransactionProvider,
         CustomerUserLoggingInfoProvider $customerUserLoggingInfoProvider,
-        Session $session
+        RequestStack $requestStack
     ) {
         $this->serviceProvider = $serviceProvider;
+        $this->configManager = $configManager;
         $this->dataHelper = $dataHelper;
         $this->urlHelper = $urlHelper;
         $this->orderItemHelper = $orderItemHelper;
@@ -95,7 +97,7 @@ class PopulatePaymentRequestV3
         $this->transactionStatusService = $transactionStatusService;
         $this->paymentTransactionProvider = $paymentTransactionProvider;
         $this->customerUserLoggingInfoProvider = $customerUserLoggingInfoProvider;
-        $this->session = $session;
+        $this->requestStack = $requestStack;
     }
 
     /**
@@ -321,9 +323,16 @@ class PopulatePaymentRequestV3
             ->setUrls($this->getUrlsEntity($paymentTransaction));
 
         // Set Shipping address
-        $shippingAddress = $order->getShippingAddress();
-        if ($shippingAddress) {
-            $requestEntity->setShippingAddress($this->populateAddressEntity($shippingAddress));
+        if ($this->config->getShippingAddressAllowed()) {
+            $shippingAddress = $order->getShippingAddress();
+            if ($shippingAddress) {
+                $requestEntity->setShippingAddress($this->populateAddressEntity($shippingAddress));
+            }
+
+            $shippingOptionEntity = $this->getShippingOptionEntity($order);
+            if ($shippingOptionEntity) {
+                $requestEntity->setShippingOption($shippingOptionEntity);
+            }
         }
 
         // Set company
@@ -331,15 +340,19 @@ class PopulatePaymentRequestV3
         if (!empty($company)) {
             $companyEntity = new CompanyEntity();
             $companyEntity->setName($company)
-                ->setExternalId($this->session->get('external_id'));
+                ->setExternalId($billingAddress->getPayeverExternalId());
 
             $requestEntity->setCompany($companyEntity);
         }
 
-        $shippingOptionEntity = $this->getShippingOptionEntity($order);
-        if ($shippingOptionEntity) {
-            $requestEntity->setShippingOption($shippingOptionEntity);
-        }
+
+        // Add Company name to payment data
+        $paymentData = new PaymentDataEntity();
+        $isRedirectMethod = $this->config->getIsRedirectMethod()
+            && $this->configManager->get('payever_payment.is_redirect');
+        $paymentData->setForceRedirect((bool)$isRedirectMethod);
+
+        $requestEntity->setPaymentData($paymentData);
 
         return $requestEntity;
     }
@@ -357,18 +370,22 @@ class PopulatePaymentRequestV3
             return null;
         }
 
-        $shippingName = $this->orderItemHelper->getShippingLabel($shippingMethod);
+        $shippingName = $this->orderItemHelper->getShippingLabel($shippingMethod) ?: 'Carrier';
         $shippingCost = $order->getShippingCost();
 
         $shippingOptionEntity = new ShippingOptionEntity();
-        $shippingOptionEntity->setName($shippingName)
-            ->setCarrier($shippingName)
-            ->setPrice($shippingCost->getValue())
+        $shippingOptionEntity->setName((string)$shippingName)
+            ->setCarrier((string)$shippingName)
+            ->setPrice((float)$shippingCost->getValue())
             ->setTaxAmount(0)
             ->setTaxRate(0);
 
+        /** @var \Oro\Bundle\TaxBundle\Model\Result $tax */
         $tax = $this->orderItemHelper->getTax($order);
+
         if ($tax && (float) ($tax->getShipping()->getIncludingTax()) > 0) {
+            // @codeCoverageIgnoreStart
+            // $tax final class
             $shippingInclTax = (float) $tax->getShipping()->getIncludingTax();
             $shippingExclTax = (float) $tax->getShipping()->getExcludingTax();
             $shippingTaxAmount = (float) $tax->getShipping()->getTaxAmount();
@@ -380,6 +397,7 @@ class PopulatePaymentRequestV3
                     round(100 * $shippingTaxAmount / $shippingExclTax, 2)
                 );
             }
+            // @codeCoverageIgnoreEnd
         }
 
         return $shippingOptionEntity;

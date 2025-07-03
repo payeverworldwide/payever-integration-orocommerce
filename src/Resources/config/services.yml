@@ -189,6 +189,7 @@ services:
     public: true
     arguments:
       - '@payever.service.api.service_provider'
+      - '@oro_config.manager'
       - '@payever.service.helper.data'
       - '@payever.service.helper.url'
       - '@payever.service.helper.order_item'
@@ -196,7 +197,7 @@ services:
       - '@payever.service.payment.transaction_status_service'
       - '@oro_payment.provider.payment_transaction'
       - '@oro_customer.provider.user_logging_info_provider'
-      - '@session'
+      - '@request_stack'
 
   Payever\Bundle\PaymentBundle\Service\Payment\Request\PopulatePaymentRequestV3:
     alias: payever.service.payment.populate.request.v3
@@ -226,7 +227,7 @@ services:
       - '@oro_payment.provider.payment_transaction'
       - '@payever.service.helper.transaction'
       - '@payever.service.management.order'
-      - '@session'
+      - '@request_stack'
       - '@payever.service.logger'
 
   Payever\Bundle\PaymentBundle\Service\Payment\TransactionStatusService:
@@ -307,7 +308,7 @@ services:
       - '@payever_payment.payment_action.registry'
       - '@oro_config.manager'
       - '@payever.service.company_credit'
-      - '@session'
+      - '@request_stack'
       - '@payever.service.logger'
 
   Payever\Bundle\PaymentBundle\Method\Factory\PayeverPaymentMethodFactory:
@@ -395,6 +396,7 @@ services:
       - '@oro_config.global'
       - '@doctrine'
       - '@doctrine.orm.entity_manager'
+      - '@oro_entity.doctrine_helper'
       - '@oro_integration.delete_manager'
       - '@payever.service.logger'
   Payever\Bundle\PaymentBundle\Service\Payment\PaymentOptionsService:
@@ -408,6 +410,7 @@ services:
       - '@oro_config.manager'
       - '@doctrine'
       - '@doctrine.orm.entity_manager'
+      - '@oro_entity.doctrine_helper'
       - '@oro_currency.config.currency'
       - '@payever.service.logger'
   Payever\Bundle\PaymentBundle\Service\Payment\PaymentRulesService:
@@ -823,8 +826,11 @@ services:
     class: Payever\Bundle\PaymentBundle\Service\Helper\AuthHelper
     public: true
     arguments:
+      - '@service_container'
+      - '@oro_user.security.user_loader'
+      - '@security.user_checker'
+      - '@event_dispatcher'
       - 'frontend'
-      - '@oro_customer.api.frontend.authentication_provider'
 
   Payever\Bundle\PaymentBundle\Service\Helper\AuthHelper:
     alias: payever.service.helper.auth

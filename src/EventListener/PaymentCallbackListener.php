@@ -25,6 +25,11 @@ use Payever\Sdk\Payments\Enum\Status;
 class PaymentCallbackListener
 {
     /**
+     * Prefix for Santander methods
+     */
+    const SANTANDER_PREFIX = 'santander';
+
+    /**
      * @var PaymentMethodProviderInterface
      */
     private PaymentMethodProviderInterface $paymentMethodProvider;
@@ -44,12 +49,7 @@ class PaymentCallbackListener
     /**
      * @var RequestStack
      */
-    private RequestStack $request;
-
-    /**
-     * @var Session
-     */
-    private Session $session;
+    private RequestStack $requestStack;
 
     /**
      * @var LoggerInterface
@@ -71,8 +71,7 @@ class PaymentCallbackListener
         PayeverConfigProviderInterface $payeverConfigProvider,
         PaymentProcessorService $paymentProcessor,
         NotificationRequestProcessor $notificationRequestProcessor,
-        RequestStack $request,
-        Session $session,
+        RequestStack $requestStack,
         LoggerInterface $logger,
         ServiceProvider $serviceProvider,
         RouterInterface $router
@@ -82,8 +81,7 @@ class PaymentCallbackListener
         $this->paymentProcessor = $paymentProcessor;
         $this->notificationRequestProcessor = $notificationRequestProcessor;
         $this->serviceProvider = $serviceProvider;
-        $this->request = $request;
-        $this->session = $session;
+        $this->requestStack = $requestStack;
         $this->logger = $logger;
         $this->router = $router;
     }
@@ -113,21 +111,22 @@ class PaymentCallbackListener
             ->setSuccessful(false)
             ->setActive(false);
 
-        $request = $this->request->getCurrentRequest();
+        $request = $this->requestStack->getCurrentRequest();
+        $session = $this->requestStack->getSession();
         if (QueryConstant::CALLBACK_TYPE_CANCEL === $request->get(QueryConstant::PARAMETER_TYPE)) {
             $this->logger->info(
                 'Payment has been cancelled by customer.',
                 [$paymentTransaction->getEntityIdentifier()]
             );
 
-            $this->session->getFlashBag()->add(
+            $session->getFlashBag()->add(
                 'warning',
                 'payever.errors.payment_cancelled_v2'
             );
         }
 
         $paymentId = $request->get(QueryConstant::PARAMETER_PAYMENT_ID);
-        if ($paymentId) {
+        if ($paymentId && QueryConstant::PAYMENT_ID_PLACEHODLER !== $paymentId) {
             /** @var RetrievePaymentResultEntity $payeverPayment */
             $payeverPayment = $this->serviceProvider
                 ->getPaymentsApiClient()
@@ -140,7 +139,7 @@ class PaymentCallbackListener
                     [$paymentTransaction->getEntityIdentifier()]
                 );
 
-                $this->session->getFlashBag()->add(
+                $session->getFlashBag()->add(
                     'warning',
                     'payever.errors.payment_declined'
                 );
@@ -156,7 +155,7 @@ class PaymentCallbackListener
                 [$paymentTransaction->getEntityIdentifier()]
             );
 
-            $this->session->getFlashBag()->add(
+            $session->getFlashBag()->add(
                 'warning',
                 'payever.errors.payment_failed_v2'
             );
@@ -187,7 +186,7 @@ class PaymentCallbackListener
             return;
         }
 
-        $request = $this->request->getCurrentRequest();
+        $request = $this->requestStack->getCurrentRequest();
         $paymentId = $request->get(QueryConstant::PARAMETER_PAYMENT_ID);
         if (!$paymentId || QueryConstant::PAYMENT_ID_PLACEHODLER === $paymentId) {
             $this->logger->info(
@@ -216,8 +215,10 @@ class PaymentCallbackListener
                 PaymentController::PAYEVER_PAYMENT_PENDING,
                 [
                     QueryConstant::PARAMETER_PAYMENT_ID => $paymentId,
-                    QueryConstant::PARAMETER_ACCESS_ID => $paymentTransaction->getAccessIdentifier()
-
+                    QueryConstant::PARAMETER_ACCESS_ID => $paymentTransaction->getAccessIdentifier(),
+                    QueryConstant::PARAMETER_IS_LOAD_TRANSACTION => $this->isSantanderMethod(
+                        $payeverPayment->getPaymentType()
+                    ),
                 ]
             )));
         }
@@ -251,7 +252,7 @@ class PaymentCallbackListener
             return;
         }
 
-        $payload = $this->request->getCurrentRequest()->getContent();
+        $payload = $this->requestStack->getCurrentRequest()->getContent();
         $this->logger->info('[Notification] Notice callback hit for payment', [$paymentTransaction->getId()]);
         $this->logger->info('[Notification] Payload: ' . $payload);
 
@@ -277,8 +278,20 @@ class PaymentCallbackListener
         $transactionOptions = $paymentTransaction->getTransactionOptions();
         if (!empty($transactionOptions['failureUrl'])) {
             $event->setResponse(new RedirectResponse($transactionOptions['failureUrl']));
-        } else {
-            $event->markFailed();
+
+            return;
         }
+        $event->markFailed();
+    }
+
+    /**
+     * Check if payment method is santander method
+     *
+     * @param string $method
+     * @return bool
+     */
+    private function isSantanderMethod($method)
+    {
+        return strpos($method, self::SANTANDER_PREFIX) !== false;
     }
 }

@@ -181,13 +181,16 @@ class TransactionBuilderService
         array $response
     ): PaymentTransaction {
         // Get source transaction
-        $sourceTransaction = $this->transactionHelper->getPaymentTransaction(
-            $order,
-            PaymentMethodInterface::AUTHORIZE
-        );
-
-        if (!$sourceTransaction) {
-            throw new \LogicException('Impossible to get source transaction.');
+        try {
+            $sourceTransaction = $this->transactionHelper->getPaymentTransaction(
+                $order,
+                PaymentMethodInterface::AUTHORIZE
+            );
+        } catch (\Exception $exception) {
+            $sourceTransaction = $this->transactionHelper->getPaymentTransaction(
+                $order,
+                PaymentMethodInterface::CAPTURE
+            );
         }
 
         // Create transaction

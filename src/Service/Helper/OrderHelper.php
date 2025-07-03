@@ -62,28 +62,6 @@ class OrderHelper
     }
 
     /**
-     * Get External ID.
-     *
-     * @param Order $order
-     *
-     * @return string|null
-     * @throws \Exception
-     */
-    public function getExternalId(Order $order): ?string
-    {
-        $externalId = null;
-        $paymentTransactions = $this->paymentTransactionProvider->getPaymentTransactions($order);
-        foreach ($paymentTransactions as $paymentTransaction) {
-            $externalId = $this->transactionHelper->getExternalId($paymentTransaction);
-            if ($externalId) {
-                break;
-            }
-        }
-
-        return $externalId;
-    }
-
-    /**
      * Get Next Autoincrement ID.
      *
      * @return string

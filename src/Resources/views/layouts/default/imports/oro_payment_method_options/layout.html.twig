@@ -1,14 +1,12 @@
 {% block _payment_methods_payever_widget %}
     <div class="{{ class_prefix }}-form__payment-methods">
-        <table class="grid">
-            <tr>
-                <td>
-                    <img src="{{ view.options.thumbnail }}"
-                         alt="{{ view.options.payment_method|escape }}"/>
-                    {{ view.options.description_offer|escape }}
-                </td>
-            </tr>
-        </table>
+        <div style="display:flex;align-items:center;">
+            <img src="{{ view.options.thumbnail }}"
+                 alt="{{ view.options.payment_method|escape }}"
+                 style="margin-right:10px;max-width:50px;"
+            />
+            <span>{{ view.options.description_offer|escape }}</span>
+        </div>
     </div>
     {% set options = {
         totalValue: view.options.total_value

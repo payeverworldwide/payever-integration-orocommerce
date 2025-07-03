@@ -4,90 +4,38 @@ declare(strict_types=1);
 
 namespace Payever\Bundle\PaymentBundle\Entity;
 
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Oro\Bundle\EntityConfigBundle\Metadata\Annotation\Config;
-use Oro\Bundle\EntityConfigBundle\Metadata\Annotation\ConfigField;
+use Payever\Bundle\PaymentBundle\Entity\Repository\PaymentActionRepository;
 
-/**
- * @ORM\Table(name="payever_payment_actions")
- * @ORM\Entity(repositoryClass="Payever\Bundle\PaymentBundle\Entity\Repository\PaymentActionsRepository")
- *
- * @SuppressWarnings(PHPMD.ShortVariable)
- */
+#[ORM\Entity(repositoryClass: PaymentActionRepository::class)]
+#[ORM\Table(name: 'payever_payment_actions')]
 class PaymentAction
 {
-    /**
-     * Unique identifier field.
-     *
-     * @var int
-     *
-     * @ORM\Id()
-     * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @ORM\Column(name="id", type="integer", nullable=false)
-     */
+    #[ORM\Column(type: Types::INTEGER)]
+    #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'AUTO')]
     private int $id;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="identifier", type="string", length=255, nullable=false)
-     */
+    #[ORM\Column(name: 'identifier', type: Types::STRING, length: 255, nullable: false)]
     private string $identifier;
 
-    /**
-     * @var int
-     *
-     * @ORM\Column(name="order_id", type="integer", nullable=false)
-     */
+    #[ORM\Column(name: 'order_id', type: Types::INTEGER, nullable: false)]
     private int $orderId;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="type", type="string", length=64, nullable=true)
-     */
+    #[ORM\Column(name: 'type', type: Types::STRING, length: 64, nullable: true)]
     private string $type;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="source", type="string", length=64, nullable=true)
-     */
+    #[ORM\Column(name: 'source', type: Types::STRING, length: 64, nullable: true)]
     private string $source;
 
-    /**
-     * @var float
-     *
-     * @ORM\Column(name="amount", type="float", nullable=true)
-     */
+    #[ORM\Column(name: 'amount', type: Types::FLOAT, nullable: true)]
     private float $amount;
 
-    /**
-     * @var \DateTime
-     *
-     * @ORM\Column(name="created_at", type="datetime")
-     * @ConfigField(
-     *      defaultValues={
-     *          "entity"={
-     *              "label"="oro.ui.created_at"
-     *          }
-     *      }
-     * )
-     */
+    #[ORM\Column(name: 'created_at', type: Types::DATETIME_MUTABLE)]
     private $createdAt;
 
-    /**
-     * @var \DateTime
-     *
-     * @ORM\Column(name="updated_at", type="datetime")
-     * @ConfigField(
-     *      defaultValues={
-     *          "entity"={
-     *              "label"="oro.ui.updated_at"
-     *          }
-     *      }
-     * )
-     */
+    #[ORM\Column(name: 'updated_at', type: Types::DATETIME_MUTABLE)]
     private $updatedAt;
 
     /**

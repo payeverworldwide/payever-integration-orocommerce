@@ -40,6 +40,27 @@ class CompanyController extends AbstractController
     }
 
     /**
+     * @Route("/retrieve", name="payever_payment_company_retrieve")
+     */
+    public function retrieveAction(
+        Request $request
+    ): JsonResponse {
+        /** @var SearchService $searchService */
+        $searchService = $this->container->get(SearchService::class);
+        $country = (string) $request->get('country');
+        $term = (string) $request->get('term');
+        $type = (string) $request->get('type');
+
+        try {
+            $searchResult = $searchService->retrieveCompany($term, $type, $country);
+
+            return new JsonResponse(['results' => $searchResult]);
+        } catch (\Exception $exception) {
+            return new JsonResponse(['error' => $exception->getMessage()], 400);
+        }
+    }
+
+    /**
      * @Route("/save", name="payever_payment_company_save")
      */
     public function saveAction(

@@ -4,7 +4,6 @@ define(function(require) {
     const _ = require('underscore');
     const __ = require('orotranslation/js/translator');
     const $ = require('jquery');
-    const mediator = require('oroui/js/mediator');
     const BaseComponent = require('oroui/js/app/components/base/component');
     const Modal = require('oroui/js/modal');
 
@@ -21,6 +20,11 @@ define(function(require) {
             /**
              * @type string
              */
+            customerAddress: '[name*=customerAddress]',
+
+            /**
+             * @type string
+             */
             companySearchType: 'popup',
 
             /**
@@ -29,6 +33,10 @@ define(function(require) {
              */
             selectorCompanyInput: '[name*=company]',
 
+            /**
+             * Specifies the element where the user types his company state
+             * @type string
+             */
             selectorCountryState: '[name*="oro_workflow_transition[billing_address][region]"]',
 
             /**
@@ -59,6 +67,11 @@ define(function(require) {
              * @type function
              */
             setAddressCallback: null,
+
+            /**
+             * @type object
+             */
+            companySearchComponent: null
         },
 
         /**
@@ -130,13 +143,18 @@ define(function(require) {
                 return;
             }
 
+            const customerAddressField = this.options.form.querySelector(this.options.customerAddress);
+            if (customerAddressField && customerAddressField.value !== '0') {
+                return;
+            }
+
             // Country region must be filled
             const regionField = this.options.form.querySelector(this.options.selectorCountryState);
             if (regionField && regionField.value === '') {
                 console.log('State is required');
                 event.preventDefault();
                 event.stopImmediatePropagation();
-                $(this.options.form).validate();
+                $(this.options.form).valid();
                 return;
             }
 
@@ -211,7 +229,17 @@ define(function(require) {
                 if (selectedRadio) {
                     const selectedCompanyElement = modal.querySelector('[name*=company_search_item_' + selectedRadio.value + ']');
                     const companyItem = JSON.parse(decodeURIComponent(selectedCompanyElement.value));
-                    self.options.setAddressCallback && self.options.setAddressCallback(companyItem);
+
+                    const autocompleteComponent = self.options.companySearchComponent.getAutocomplete();
+
+                    if (
+                        autocompleteComponent.options.invalidCompanyId === companyItem.id
+                        && typeof companyItem.company_identifier !== "undefined"
+                    ) {
+                        autocompleteComponent.retrieveCompany(companyItem);
+                    } else {
+                        self.options.setAddressCallback && self.options.setAddressCallback(companyItem);
+                    }
                     self.setCompanySearchContentForPopup('');
                 }
 

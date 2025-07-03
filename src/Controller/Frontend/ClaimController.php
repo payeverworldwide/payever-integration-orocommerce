@@ -82,7 +82,7 @@ class ClaimController extends AbstractController
     {
         $user = (string)$request->headers->get('PHP_AUTH_USER');
         $password = (string)$request->headers->get('PHP_AUTH_PW');
-        if (!$authHelper->validateUserCredentials($user, $password, $request->getClientIp())) {
+        if (!$authHelper->validateUserCredentials($user, $password)) {
             return $this->createAuthenticateResponse();
         }
 

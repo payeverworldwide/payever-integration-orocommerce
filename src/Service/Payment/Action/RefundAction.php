@@ -98,6 +98,10 @@ class RefundAction extends ActionAbstract implements ActionInterface
         $deliveryFee = 0;
         $paymentItems = [];
         foreach ($items as $itemReference => $qty) {
+            if (!$qty) {
+                continue;
+            }
+
             $orderItem = $this->orderManager->getOrderItem($order, $itemReference);
             if (!$orderItem) {
                 $this->logger->critical(sprintf('Order item %s does not exists.', $itemReference));
@@ -115,9 +119,13 @@ class RefundAction extends ActionAbstract implements ActionInterface
             $paymentEntity->setIdentifier($orderItem->getItemReference())
                 ->setName($orderItem->getName())
                 ->setPrice(round((float) $orderItem->getUnitPrice(), 2))
-                ->setQuantity($qty);
+                ->setQuantity((int) $qty);
 
             $paymentItems[] = $paymentEntity;
+        }
+
+        if (empty($paymentItems) && $deliveryFee > 0) {
+            return $this->execute($order, $deliveryFee);
         }
 
         $paymentAction = $this->paymentActionManager->addAction(

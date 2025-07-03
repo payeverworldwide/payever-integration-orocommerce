@@ -7,8 +7,10 @@
     </div>
   <div class="checkout__success">
         <h2 class="checkout__success__title">{{ 'payever.messages.pending_payment_thankyou'|trans }}</h2>
-        <p>{{ 'payever.messages.pending_payment_process'|trans }}</p>
-        <p>{{ 'payever.messages.pending_payment_update'|trans }}</p>
+        {% if is_loan_transaction %}
+            <p>{{ 'payever.messages.pending_payment_process'|trans }}</p>
+            <p>{{ 'payever.messages.pending_payment_update'|trans }}</p>
+        {% endif %}
 
         <div class="pe-checkout-bootstrap loader-container loader-fixed loader-fade-dark">
             <div class="loader_48"></div>

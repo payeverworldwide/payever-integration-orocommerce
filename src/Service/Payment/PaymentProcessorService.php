@@ -90,20 +90,6 @@ class PaymentProcessorService
     /**
      * @param PaymentTransaction $paymentTransaction
      *
-     * @return $this
-     */
-    public function saveExternalId(PaymentTransaction $paymentTransaction): self
-    {
-        if ($this->config->getIsB2BMethod()) {
-            $this->transactionStatusService->persistExternalId($paymentTransaction);
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param PaymentTransaction $paymentTransaction
-     *
      * @return string
      * @throws \Exception
      */

@@ -10,6 +10,7 @@ use Payever\Bundle\PaymentBundle\Method\Payever;
 use Payever\Bundle\PaymentBundle\Method\PaymentAction\PaymentActionRegistry;
 use Payever\Bundle\PaymentBundle\Service\Company\CompanyCreditService;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\Session;
 
 class PayeverPaymentMethodFactory implements PayeverPaymentMethodFactoryInterface
@@ -30,9 +31,9 @@ class PayeverPaymentMethodFactory implements PayeverPaymentMethodFactoryInterfac
     private CompanyCreditService $companyCreditService;
 
     /**
-     * @var Session
+     * @var RequestStack
      */
-    private Session $session;
+    private RequestStack $requestStack;
 
     /**
      * @var LoggerInterface
@@ -43,13 +44,13 @@ class PayeverPaymentMethodFactory implements PayeverPaymentMethodFactoryInterfac
         PaymentActionRegistry $paymentActionRegistry,
         ConfigManager $configManager,
         CompanyCreditService $companyCreditService,
-        Session $session,
+        RequestStack $requestStack,
         LoggerInterface $logger
     ) {
         $this->paymentActionRegistry = $paymentActionRegistry;
         $this->configManager = $configManager;
         $this->companyCreditService = $companyCreditService;
-        $this->session = $session;
+        $this->requestStack = $requestStack;
         $this->logger = $logger;
     }
 
@@ -63,7 +64,7 @@ class PayeverPaymentMethodFactory implements PayeverPaymentMethodFactoryInterfac
             $this->configManager,
             $this->paymentActionRegistry,
             $this->companyCreditService,
-            $this->session,
+            $this->requestStack,
             $this->logger
         );
     }

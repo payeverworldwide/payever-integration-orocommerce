@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Payever\Bundle\PaymentBundle\Controller\Frontend;
 
 use Oro\Bundle\CustomerBundle\Entity\CustomerUser;
-use Oro\Bundle\LayoutBundle\Annotation\Layout;
+use Payever\Bundle\PaymentBundle\Attribute\Layout;
 use Payever\Bundle\PaymentBundle\Constant\PaymentMethodConstant;
 use Payever\Bundle\PaymentBundle\Constant\QueryConstant;
 use Payever\Bundle\PaymentBundle\Service\Helper\PaymentMethodHelper;
@@ -152,9 +152,9 @@ class FinanceExpressController extends AbstractController
 
     /**
      * @Route("/order-success", name="payever_payment_fe_order_success")
-     * @Layout(vars={"reference"})
      * @return array|Response
      */
+    #[Layout(vars: ['reference'])]
     public function orderSuccessAction(Request $request)
     {
         return [

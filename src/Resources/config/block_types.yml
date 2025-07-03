@@ -9,7 +9,7 @@ services:
   payever.layout.type.pending_order:
     parent: oro_layout.block_type.abstract_configurable
     calls:
-      - [setOptionsConfig, [{api_order_update_status: {required: true}}]]
+      - [setOptionsConfig, [{api_order_update_status: {required: true}, is_loan_transaction: {required: false}}]]
       - [setName, ['payever_pending_order']]
     tags:
       - { name: layout.block_type, alias: payever_pending_order }

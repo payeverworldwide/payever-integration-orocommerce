@@ -220,7 +220,8 @@ payever:
       refund:
         message: Payment will be refunded
       settle:
-        message: Payment will be settled
+        message: By setting this payment, you confirm that you have been received the outstanding amount from the customer to your bank account.
+        message2: We will consider the payment successful and final, and the insurance will not pay out anything to you for this case, as you have received the full amount from the customer.
       invoice:
         message: Payment will be invoiced
   fields:
@@ -246,7 +247,7 @@ payever:
       refund:
         label: payever Refund
       settle:
-        label: payever Settle
+        label: payever Settlement
       claim:
         label: payever Claim
       claim_upload:

@@ -27,7 +27,20 @@ class ClaimUploadAction extends ActionAbstract
                 $claimUploadPaymentRequest->setDocumentType(ClaimUploadPaymentRequest::DOCUMENT_TYPE_INVOICE);
 
                 /** @var ClaimUploadPaymentResponse $result */
-                $result = $this->getPaymentApiClient()->claimUploadPaymentRequest($paymentId, $claimUploadPaymentRequest);
+                $result = $this->getPaymentApiClient()->claimUploadPaymentRequest(
+                    $paymentId,
+                    $claimUploadPaymentRequest
+                );
+
+                $this->logger->info(
+                    sprintf('Claim upload action successfully executed for payment %s.', $paymentId)
+                );
+
+                /** @var ClaimUploadPaymentResponse $response */
+                $response = $result->getResponseEntity();
+                $this->logger->debug('Claim upload action response', $response->toArray());
+
+                return $response;
             }
         } catch (\Exception $exception) {
             $this->logger->critical('Clam upload action error: ' . $exception->getMessage());
@@ -35,14 +48,6 @@ class ClaimUploadAction extends ActionAbstract
             throw new \LogicException($exception->getMessage());
         }
 
-        $this->logger->info(
-            sprintf('Claim upload action successfully executed for payment %s.', $paymentId)
-        );
-
-        /** @var ClaimUploadPaymentResponse $response */
-        $response = $result->getResponseEntity();
-        $this->logger->debug('Claim upload action response', $response->toArray());
-
-        return $response;
+        throw new \LogicException('No any invoice to continue this action');
     }
 }

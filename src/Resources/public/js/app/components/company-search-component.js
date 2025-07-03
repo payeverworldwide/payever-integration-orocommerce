@@ -32,17 +32,17 @@ define(function(require) {
              * @type defaultAddressFields
              */
             selectorDefaultAddressFields: {
-                street: '[name*="oro_workflow_transition[billing_address][street]"]',
-                zipcode: '[name*="oro_workflow_transition[billing_address][postalCode]"]',
-                city: '[name*="oro_workflow_transition[billing_address][city]"]',
-                country: '[name*="oro_workflow_transition[billing_address][country]"]',
-                countryState: '[name*="oro_workflow_transition[billing_address][region]"]',
+                street: '[name*="[street]"]',
+                zipcode: '[name*="postalCode]"]',
+                city: '[name*="[city]"]',
+                country: '[name*="[country]"]',
+                countryState: '[name*="[region]"]',
             },
             /**
              * Specifies the element where the user types his company
              * @type string
              */
-            selectorCompanyInput: '[name*="oro_workflow_transition[billing_address][organization]"]',
+            selectorCompanyInput: '[name*="[organization]"]',
 
             /**
              * Specifies the country iso2 code element
@@ -54,7 +54,7 @@ define(function(require) {
              * Specifies the company id element
              * @type string
              */
-            selectorCompanyId: '.payever-buyer-id',
+            selectorCompanyId: '[name*="[payever_external_id]"]',
 
             /**
              * b2b status
@@ -70,7 +70,12 @@ define(function(require) {
             /**
              * b2b countries
              */
-            b2bCountries: []
+            b2bCountries: [],
+
+            /**
+             * default country
+             */
+            defaultCountry: 'de'
         },
 
         /**
@@ -151,28 +156,16 @@ define(function(require) {
             });
         },
         onWidgetReady: function (callback) {
+            const self = this;
             const intervalId = setInterval(function () {
-                let nodeList = document.querySelectorAll('[name="oro_workflow_transition[billing_address][organization]"]');
+                let nodeList = document.querySelectorAll(self.options.selectorCompanyInput);
                 if (nodeList.length > 0) {
                     clearInterval(intervalId);
                     callback(nodeList[0]);
                 }
             }, 1000);
         },
-        saveData: function(vatId, externalId) {
-            let self = this;
 
-            return $.post(
-                self.options.saveUrl,
-                {
-                    vatId: vatId,
-                    externalId: externalId
-                },
-                function(response) {
-                    console.log(response);
-                }
-            );
-        },
         /**
          * Add event to get changes from the suggest input field
          * @return void
@@ -244,7 +237,8 @@ define(function(require) {
                 'autocompleteItemsElement': autocompleteItemsElement,
                 'autocompleteItemsForPopupElement': autocompleteItemsForPopupElement,
                 'companySearchType': self.options.companySearchType,
-                'searchUrl': self.options.searchUrl
+                'searchUrl': self.options.searchUrl,
+                'companyRetrieveUrl': self.options.companyRetrieveUrl
             });
 
             return this.autocompleteComponent;
@@ -260,7 +254,8 @@ define(function(require) {
             this.countryPickerComponent.initialize({
                 'element': document.querySelector('[data-payever-country-picker*=true]'),
                 'searchCallback': self.doSearch.bind(self),
-                'onlyCountries': _.map(self.options.b2bCountries, function(value) { return value.toString().toLocaleLowerCase() })
+                'defaultCountry': self.options.defaultCountry.toString().toLocaleLowerCase(),
+                'onlyCountries': _.map(self.options.b2bCountries, function(value) { return value.toString().toLocaleLowerCase() }),
             });
 
             return this.countryPickerComponent;
@@ -277,7 +272,8 @@ define(function(require) {
                 'form': self.getParentForm(),
                 'companySearchType': self.options.companySearchType,
                 'searchCallback': self.doSearch.bind(self),
-                'setAddressCallback': self.fillAddress.bind(self)
+                'setAddressCallback': self.fillAddress.bind(self),
+                'companySearchComponent': self
             });
 
             return this.countrySearchPopupComponent;
@@ -402,8 +398,6 @@ define(function(require) {
          * @return void
          */
         fillAddress(company) {
-            this.saveData(company.vat_id, company.id);
-
             const streetElement = this.getStreetElement(),
                 zipElement = this.getZipElement(),
                 cityElement = this.getCityElement(),

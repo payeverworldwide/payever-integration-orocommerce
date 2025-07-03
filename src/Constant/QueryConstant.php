@@ -9,6 +9,7 @@ class QueryConstant
     public const PARAMETER_ACCESS_ID = 'accessIdentifier';
     public const PARAMETER_ACCESS_TOKEN = 'accessToken';
     public const PARAMETER_PAYMENT_ID = 'paymentId';
+    public const PARAMETER_IS_LOAD_TRANSACTION = 'is_loan_transaction';
     public const PARAMETER_TYPE = 'type';
     public const PARAMETER_ORDER_REFERENCE = 'reference';
     public const PARAMETER_CART = 'cart';

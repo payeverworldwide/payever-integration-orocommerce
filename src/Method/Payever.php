@@ -13,7 +13,7 @@ use Payever\Bundle\PaymentBundle\Method\PaymentAction\PaymentActionRegistry;
 use Payever\Bundle\PaymentBundle\Service\Company\CompanyCreditService;
 use Payever\Sdk\Payments\Enum\PaymentMethod;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class Payever implements PaymentMethodInterface
 {
@@ -40,9 +40,9 @@ class Payever implements PaymentMethodInterface
     private CompanyCreditService $companyCreditService;
 
     /**
-     * @var Session
+     * @var RequestStack
      */
-    private Session $session;
+    private RequestStack $requestStack;
 
     private LoggerInterface $logger;
 
@@ -51,7 +51,7 @@ class Payever implements PaymentMethodInterface
      * @param ConfigManager $configManager
      * @param PaymentActionRegistry $paymentActionRegistry
      * @param CompanyCreditService $companyCreditService
-     * @param Session $session
+     * @param RequestStack $requestStack
      * @param LoggerInterface $logger
      */
     public function __construct(
@@ -59,14 +59,14 @@ class Payever implements PaymentMethodInterface
         ConfigManager $configManager,
         PaymentActionRegistry $paymentActionRegistry,
         CompanyCreditService $companyCreditService,
-        Session $session,
+        RequestStack $requestStack,
         LoggerInterface $logger
     ) {
         $this->config = $config;
         $this->configManager = $configManager;
         $this->paymentActionRegistry = $paymentActionRegistry;
         $this->companyCreditService = $companyCreditService;
-        $this->session = $session;
+        $this->requestStack = $requestStack;
         $this->logger = $logger;
     }
 
@@ -170,7 +170,7 @@ class Payever implements PaymentMethodInterface
      */
     private function shouldHideB2BMethod(PaymentContextInterface $context): bool
     {
-        $companyId = $this->session->get('external_id') ?? null;
+        $companyId = $context->getBillingAddress()->getPayeverExternalId();
         if (!$companyId) {
             $this->logger->debug(
                 sprintf(

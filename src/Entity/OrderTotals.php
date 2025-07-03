@@ -4,74 +4,38 @@ declare(strict_types=1);
 
 namespace Payever\Bundle\PaymentBundle\Entity;
 
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Payever\Bundle\PaymentBundle\Entity\Repository\OrderTotalsRepository;
 
-/**
- * @ORM\Table(name="payever_order_totals")
- * @ORM\Entity(repositoryClass="Payever\Bundle\PaymentBundle\Entity\Repository\OrderTotalsRepository")
- *
- * @SuppressWarnings(PHPMD.ShortVariable)
- */
+#[ORM\Entity(repositoryClass: OrderTotalsRepository::class)]
+#[ORM\Table(name: 'payever_order_totals')]
 class OrderTotals
 {
-    /**
-     * Unique identifier field.
-     *
-     * @var int
-     *
-     * @ORM\Id()
-     * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @ORM\Column(name="id", type="integer", nullable=false)
-     */
+    #[ORM\Column(type: Types::INTEGER)]
+    #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'AUTO')]
     private int $id;
 
-    /**
-     * @var int
-     *
-     * @ORM\Column(name="order_id", type="integer", nullable=false)
-     */
+    #[ORM\Column(name: 'order_id', type: Types::INTEGER, nullable: false)]
     private int $orderId;
 
-    /**
-     * @var float
-     *
-     * @ORM\Column(name="captured_total", type="float", nullable=false)
-     */
+    #[ORM\Column(name: 'captured_total', type: Types::FLOAT, nullable: false)]
     private float $capturedTotal;
 
-    /**
-     * @var float
-     *
-     * @ORM\Column(name="cancelled_total", type="float", nullable=false)
-     */
+    #[ORM\Column(name: 'cancelled_total', type: Types::FLOAT, nullable: false)]
     private float $cancelledTotal;
 
-    /**
-     * @var float
-     *
-     * @ORM\Column(name="refunded_total", type="float", nullable=false)
-     */
+    #[ORM\Column(name: 'refunded_total', type: Types::FLOAT, nullable: false)]
     private float $refundedTotal;
 
-    /**
-     * @var float
-     *
-     * @ORM\Column(name="settled_total", type="float", nullable=false)
-     */
+    #[ORM\Column(name: 'settled_total', type: Types::FLOAT, nullable: false)]
     private float $settledTotal;
 
-    /**
-     * @var float
-     *
-     * @ORM\Column(name="invoiced_total", type="float", nullable=false)
-     */
+    #[ORM\Column(name: 'invoiced_total', type: Types::FLOAT, nullable: false)]
     private float $invoicedTotal;
 
-    /**
-     * @var int
-     *
-     * @ORM\Column(name="manual", type="integer", nullable=false)
-     */
+    #[ORM\Column(name: 'manual', type: Types::INTEGER, nullable: false)]
     private int $manual;
 
     /**

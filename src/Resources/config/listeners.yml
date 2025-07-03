@@ -12,7 +12,6 @@ services:
       - '@payever.service.payment.payment_processor'
       - '@payever.service.payment.notification_request_processor'
       - '@request_stack'
-      - '@session'
       - '@payever.service.logger'
       - '@payever.service.api.service_provider'
       - '@router'

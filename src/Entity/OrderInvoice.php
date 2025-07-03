@@ -4,53 +4,29 @@ declare(strict_types=1);
 
 namespace Payever\Bundle\PaymentBundle\Entity;
 
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Payever\Bundle\PaymentBundle\Entity\Repository\OrderInvoiceRepository;
 
-/**
- * @ORM\Table(name="payever_order_invoices")
- * @ORM\Entity(repositoryClass="Payever\Bundle\PaymentBundle\Entity\Repository\OrderInvoiceRepository")
- *
- * @SuppressWarnings(PHPMD.ShortVariable)
- */
+#[ORM\Entity(repositoryClass: OrderInvoiceRepository::class)]
+#[ORM\Table(name: 'payever_order_invoices')]
 class OrderInvoice
 {
-    /**
-     * Unique identifier field.
-     *
-     * @var int
-     *
-     * @ORM\Id()
-     * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @ORM\Column(name="id", type="integer", nullable=false)
-     */
+    #[ORM\Column(type: Types::INTEGER)]
+    #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'AUTO')]
     private $id;
 
-    /**
-     * @var int
-     *
-     * @ORM\Column(name="order_id", type="integer", nullable=false)
-     */
+    #[ORM\Column(name: 'order_id', type: Types::INTEGER, nullable: false)]
     private int $orderId;
 
-    /**
-     * @var int
-     *
-     * @ORM\Column(name="attachment_id", type="integer", nullable=false)
-     */
+    #[ORM\Column(name: 'attachment_id', type: Types::INTEGER, nullable: false)]
     private int $attachmentId;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="payment_id", type="string", nullable=false)
-     */
+    #[ORM\Column(name: 'payment_id', type: Types::STRING, nullable: false)]
     private string $paymentId;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="external_id", type="string", nullable=true)
-     */
+    #[ORM\Column(name: 'external_id', type: Types::STRING, nullable: true)]
     private string $externalId;
 
     /**
@@ -61,6 +37,17 @@ class OrderInvoice
     public function getId(): int
     {
         return $this->id;
+    }
+
+    /**
+     * @param int $id
+     * @return $this
+     */
+    public function setId(int $id): self
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     /**

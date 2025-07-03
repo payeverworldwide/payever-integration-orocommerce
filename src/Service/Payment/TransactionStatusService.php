@@ -16,7 +16,7 @@ use Payever\Bundle\PaymentBundle\Service\Management\OrderManager;
 use Payever\Sdk\Payments\Enum\Status;
 use Payever\Sdk\Payments\Http\MessageEntity\RetrievePaymentResultEntity;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class TransactionStatusService
 {
@@ -41,9 +41,9 @@ class TransactionStatusService
     private OrderManager $orderManager;
 
     /**
-     * @var Session
+     * @var RequestStack
      */
-    private Session $session;
+    private RequestStack $requestStack;
 
     /**
      * @var LoggerInterface
@@ -57,7 +57,7 @@ class TransactionStatusService
      * @param PaymentTransactionProvider $paymentTransactionProvider
      * @param TransactionHelper $transactionHelper
      * @param OrderManager $orderManager
-     * @param Session $session
+     * @param RequestStack $requestStack
      * @param LoggerInterface $logger
      */
     public function __construct(
@@ -65,14 +65,14 @@ class TransactionStatusService
         PaymentTransactionProvider $paymentTransactionProvider,
         TransactionHelper $transactionHelper,
         OrderManager $orderManager,
-        Session $session,
+        RequestStack $requestStack,
         LoggerInterface $logger
     ) {
         $this->entityManager = $entityManager;
         $this->paymentTransactionProvider = $paymentTransactionProvider;
         $this->transactionHelper = $transactionHelper;
         $this->orderManager = $orderManager;
-        $this->session = $session;
+        $this->requestStack = $requestStack;
         $this->logger = $logger;
     }
 
@@ -142,20 +142,6 @@ class TransactionStatusService
 
                 break;
         }
-    }
-
-    /**
-     * Persist Transaction Status.
-     *
-     * @param PaymentTransaction $paymentTransaction
-     * @return void
-     */
-    public function persistExternalId(PaymentTransaction $paymentTransaction): void
-    {
-        $this->transactionHelper->updateTransactionOptions(
-            $paymentTransaction,
-            [TransactionHelper::FIELD_EXTERNAL_ID => $this->session->get('external_id')]
-        );
     }
 
     /**

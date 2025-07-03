@@ -39,11 +39,11 @@ class OrderPayment
      */
     private string $currencySymbol;
 
-    private ?string $shippingDate;
+    private ?string $shippingDate = null;
 
-    private ?string $trackingNumber;
+    private ?string $trackingNumber = null;
 
-    private ?string $trackingUrl;
+    private ?string $trackingUrl = null;
 
     /**
      * @return OrderLineItem[]

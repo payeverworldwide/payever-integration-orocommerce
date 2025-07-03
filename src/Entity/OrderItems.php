@@ -4,95 +4,47 @@ declare(strict_types=1);
 
 namespace Payever\Bundle\PaymentBundle\Entity;
 
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Payever\Bundle\PaymentBundle\Entity\Repository\OrderItemsRepository;
 
-/**
- * @ORM\Table(name="payever_order_items")
- * @ORM\Entity(repositoryClass="Payever\Bundle\PaymentBundle\Entity\Repository\OrderItemsRepository")
- *
- * @SuppressWarnings(PHPMD.ShortVariable)
- */
+#[ORM\Entity(repositoryClass: OrderItemsRepository::class)]
+#[ORM\Table(name: 'payever_order_items')]
 class OrderItems
 {
-    /**
-     * Unique identifier field.
-     *
-     * @var int
-     *
-     * @ORM\Id()
-     * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @ORM\Column(name="id", type="integer", nullable=false)
-     */
+    #[ORM\Column(type: Types::INTEGER)]
+    #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'AUTO')]
     private $id;
 
-    /**
-     * @var int
-     *
-     * @ORM\Column(name="order_id", type="integer", nullable=false)
-     */
+    #[ORM\Column(name: 'order_id', type: Types::INTEGER, nullable: false)]
     private $orderId;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="item_type", type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(name: 'item_type', type: Types::STRING, length: 255, nullable: true)]
     private $itemType;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="item_reference", type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(name: 'item_reference', type: Types::STRING, length: 255, nullable: true)]
     private $itemReference;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="name", type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(name: 'name', type: Types::STRING, length: 255, nullable: true)]
     private $name;
 
-    /**
-     * @var float
-     *
-     * @ORM\Column(name="unit_price", type="float", nullable=true)
-     */
+    #[ORM\Column(name: 'unit_price', type: Types::FLOAT, nullable: true)]
     private $unitPrice;
 
-    /**
-     * @var float
-     *
-     * @ORM\Column(name="total_price", type="float", nullable=true)
-     */
+    #[ORM\Column(name: 'total_price', type: Types::FLOAT, nullable: true)]
     private $totalPrice;
 
-    /**
-     * @var float
-     *
-     * @ORM\Column(name="quantity", type="float", nullable=true)
-     */
+    #[ORM\Column(name: 'quantity', type: Types::FLOAT, nullable: true)]
     private $quantity;
 
-    /**
-     * @var float
-     *
-     * @ORM\Column(name="qty_captured", type="float", nullable=true)
-     */
+    #[ORM\Column(name: 'qty_captured', type: Types::FLOAT, nullable: true)]
     private $qtyCaptured;
 
-    /**
-     * @var float
-     *
-     * @ORM\Column(name="qty_cancelled", type="float", nullable=true)
-     */
+    #[ORM\Column(name: 'qty_cancelled', type: Types::FLOAT, nullable: true)]
     private $qtyCancelled;
 
-    /**
-     * @var float
-     *
-     * @ORM\Column(name="qty_refunded", type="float", nullable=true)
-     */
+    #[ORM\Column(name: 'qty_refunded', type: Types::FLOAT, nullable: true)]
     private $qtyRefunded;
 
     /**

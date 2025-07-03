@@ -6,172 +6,81 @@ namespace Payever\Bundle\PaymentBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Oro\Bundle\IntegrationBundle\Entity\Transport;
 use Oro\Bundle\LocaleBundle\Entity\LocalizedFallbackValue;
+use Payever\Bundle\PaymentBundle\Entity\Repository\PayeverSettingsRepository;
 use Payever\Bundle\PaymentBundle\Method\Config\PayeverConfig;
 use Symfony\Component\HttpFoundation\ParameterBag;
-use Symfony\Component\Validator\Constraints as Assert;
 
-/**
- * @ORM\Entity(repositoryClass="Payever\Bundle\PaymentBundle\Entity\Repository\PayeverSettingsRepository")
- * @SuppressWarnings(PHPMD.TooManyFields)
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- */
+#[ORM\Entity(repositoryClass: PayeverSettingsRepository::class)]
 class PayeverSettings extends Transport
 {
-    /**
-     * @var string
-     * @ORM\Column(name="payever_payment_method", type="string", nullable=true)
-     */
+    #[ORM\Column(name: 'payever_payment_method', type: Types::STRING, nullable: true)]
     protected $paymentMethod;
 
-    /**
-     * @var string
-     * @ORM\Column(name="payever_variant_id", type="string", nullable=true)
-     */
+    #[ORM\Column(name: 'payever_variant_id', type: Types::STRING, nullable: true)]
     protected $variantId;
 
-    /**
-     * @var string
-     * @ORM\Column(name="payever_description_offer", type="string", length=500, nullable=true)
-     */
+    #[ORM\Column(name: 'payever_description_offer', type: Types::STRING, length: 500, nullable: true)]
     protected $descriptionOffer;
 
-    /**
-     * @var string
-     * @ORM\Column(name="payever_description_fee", type="string", nullable=true)
-     */
+    #[ORM\Column(name: 'payever_description_fee', type: Types::STRING, nullable: true)]
     protected $descriptionFee;
 
-    /**
-     * @var bool
-     * @ORM\Column(name="payever_is_redirect_method", type="boolean", options={"default"=false})
-     */
+    #[ORM\Column(name: 'payever_is_redirect_method', type: Types::BOOLEAN, options: ['default' => false])]
     protected $isRedirectMethod = false;
 
-    /**
-     * @var bool
-     * @ORM\Column(name="payever_is_submit_method", type="boolean", options={"default"=false})
-     */
+    #[ORM\Column(name: 'payever_is_submit_method', type: Types::BOOLEAN, options: ['default' => false])]
     protected $isSubmitMethod = false;
 
-    /**
-     * @var bool
-     * @ORM\Column(name="payever_is_b2b_method", type="boolean", options={"default"=false})
-     */
+    #[ORM\Column(name: 'payever_is_b2b_method', type: Types::BOOLEAN, options: ['default' => false])]
     protected $isB2BMethod = false;
 
-    /**
-     * @var string
-     * @ORM\Column(name="payever_instruction_text", type="string", nullable=true)
-     */
+    #[ORM\Column(name: 'payever_instruction_text', type: Types::STRING, nullable: true)]
     protected $instructionText;
 
-    /**
-     * @var string
-     * @ORM\Column(name="payever_thumbnail", type="string", nullable=true)
-     */
+    #[ORM\Column(name: 'payever_thumbnail', type: Types::STRING, nullable: true)]
     protected $thumbnail;
 
-    /**
-     * @var string
-     * @ORM\Column(name="payever_currencies", type="string", length=4000, nullable=true)
-     */
+    #[ORM\Column(name: 'payever_currencies', type: Types::STRING, length: 4000, nullable: true)]
     protected $currencies;
 
-    /**
-     * @var string
-     * @ORM\Column(name="payever_countries", type="string", length=4000, nullable=true)
-     */
+    #[ORM\Column(name: 'payever_countries', type: Types::STRING, length: 4000, nullable: true)]
     protected $countries;
 
-    /**
-     * @var bool
-     * @ORM\Column(name="payever_is_shipping_address_allowed", type="boolean", options={"default"=false})
-     */
+    #[ORM\Column(name: 'payever_is_shipping_address_allowed', type: Types::BOOLEAN, options: ['default' => false])]
     protected $isShippingAddressAllowed = false;
 
-    /**
-     * @var bool
-     * @ORM\Column(name="payever_is_shipping_address_equality", type="boolean", options={"default"=false})
-     */
+    #[ORM\Column(name: 'payever_is_shipping_address_equality', type: Types::BOOLEAN, options: ['default' => false])]
     protected $isShippingAddressEquality = false;
 
-    /**
-     * @var float
-     *
-     * @ORM\Column(name="payever_max", type="float", nullable=true)
-     */
+    #[ORM\Column(name: 'payever_max', type: Types::FLOAT, nullable: true)]
     protected $max;
 
-    /**
-     * @var float
-     *
-     * @ORM\Column(name="payever_min", type="float", nullable=true)
-     */
+    #[ORM\Column(name: 'payever_min', type: Types::FLOAT, nullable: true)]
     protected $min;
 
-    /**
-     * @var bool
-     * @ORM\Column(name="payever_is_accept_fee", type="boolean", options={"default"=false})
-     */
+    #[ORM\Column(name: 'payever_is_accept_fee', type: Types::BOOLEAN, options: ['default' => false])]
     protected $isAcceptFee = false;
 
-    /**
-     * @var float
-     *
-     * @ORM\Column(name="payever_fixed_fee", type="float", nullable=true)
-     */
+    #[ORM\Column(name: 'payever_fixed_fee', type: Types::FLOAT, nullable: true)]
     protected $fixedFee;
 
-    /**
-     * @var float
-     *
-     * @ORM\Column(name="payever_variable_fee", type="float", nullable=true)
-     */
+    #[ORM\Column(name: 'payever_variable_fee', type: Types::FLOAT, nullable: true)]
     protected $variableFee;
 
-    /**
-     * @var Collection|LocalizedFallbackValue[]
-     *
-     * @ORM\ManyToMany(
-     *      targetEntity="Oro\Bundle\LocaleBundle\Entity\LocalizedFallbackValue",
-     *      cascade={"ALL"},
-     *      orphanRemoval=true
-     * )
-     * @ORM\JoinTable(
-     *      name="payever_trans_label",
-     *      joinColumns={
-     *          @ORM\JoinColumn(name="transport_id", referencedColumnName="id", onDelete="CASCADE")
-     *      },
-     *      inverseJoinColumns={
-     *          @ORM\JoinColumn(name="localized_value_id", referencedColumnName="id", onDelete="CASCADE", unique=true)
-     *      }
-     * )
-     * @Assert\NotBlank
-     */
+    #[ORM\ManyToMany(targetEntity: LocalizedFallbackValue::class, cascade: ['ALL'], orphanRemoval: true)]
+    #[ORM\JoinTable(name: 'payever_trans_label')]
+    #[ORM\JoinColumn(name: 'transport_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'localized_value_id', referencedColumnName: 'id', unique: true, onDelete: 'CASCADE')]
     private $labels;
 
-    /**
-     * @var Collection|LocalizedFallbackValue[]
-     *
-     * @ORM\ManyToMany(
-     *      targetEntity="Oro\Bundle\LocaleBundle\Entity\LocalizedFallbackValue",
-     *      cascade={"ALL"},
-     *      orphanRemoval=true
-     * )
-     * @ORM\JoinTable(
-     *      name="payever_short_label",
-     *      joinColumns={
-     *          @ORM\JoinColumn(name="transport_id", referencedColumnName="id", onDelete="CASCADE")
-     *      },
-     *      inverseJoinColumns={
-     *          @ORM\JoinColumn(name="localized_value_id", referencedColumnName="id", onDelete="CASCADE", unique=true)
-     *      }
-     * )
-     * @Assert\NotBlank
-     */
+    #[ORM\ManyToMany(targetEntity: LocalizedFallbackValue::class, cascade: ['ALL'], orphanRemoval: true)]
+    #[ORM\JoinTable(name: 'payever_short_label')]
+    #[ORM\JoinColumn(name: 'transport_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'localized_value_id', referencedColumnName: 'id', unique: true, onDelete: 'CASCADE')]
     private $shortLabels;
 
     /**

@@ -2,9 +2,6 @@ define(function(require) {
     'use strict';
 
     const _ = require('underscore');
-    const __ = require('orotranslation/js/translator');
-    const $ = require('jquery');
-    const mediator = require('oroui/js/mediator');
     const BaseComponent = require('oroui/js/app/components/base/component');
     const CountryPickerComponent = BaseComponent.extend({
         /**
@@ -15,9 +12,10 @@ define(function(require) {
              * @type Node
              */
             element: null,
+            isOpening: false,
 
             // Default country
-            defaultCountry: '',
+            defaultCountry: 'de',
             // Position the selected flag inside or outside of the input
             defaultStyling: "inside",
             // Display only these countries
@@ -1137,7 +1135,7 @@ define(function(require) {
             // click off to close
             // (except when this initial opening click is bubbling up)
             // we cannot just stopPropagation as it may be needed to close another instance
-            that.isOpening = true;
+            that.options.isOpening = !that.options.isOpening;
             that.clickEventHandler = that._click.bind(that);
             window.addEventListener('click', that.clickEventHandler);
 
@@ -1151,10 +1149,15 @@ define(function(require) {
 
         _click(event) {
             event.preventDefault();
-            if (!this.isOpening) {
+            if (!this.selectedFlagInner.parentNode.contains(event.target)) {
+                this._closeDropdown();
+                this.options.isOpening = false;
+                return;
+            }
+
+            if (this.selectedFlagInner.parentNode.contains(event.target) && !this.options.isOpening) {
                 this._closeDropdown();
             }
-            this.isOpening = false;
         },
 
         _keydown(event) {
@@ -1269,9 +1272,7 @@ define(function(require) {
          * @param listItem
          */
         _highlightListItem(listItem) {
-            console.log('_highlightListItem');
             this.countryListItems.forEach(function (countryListItem) {
-                console.log(countryListItem);
                 countryListItem.classList.remove('highlight');
             });
             listItem.classList.add('highlight');

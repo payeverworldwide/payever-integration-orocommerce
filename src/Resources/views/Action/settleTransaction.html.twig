@@ -1,8 +1,9 @@
 {% extends '@OroAction/Operation/form.html.twig' %}
 
 {% block widget_content_inner %}
-    <div class="alert alert-info" role="alert">
-        {{ 'payever.order.payment_transaction.settle.message'|trans() }}
+    <div class="alert" role="alert" style="max-width:550px;text-align:justify;font-size:14px;">
+        <p style="margin-bottom: 10px;">{{ 'payever.order.payment_transaction.settle.message'|trans() }}</p>
+        <p>{{ 'payever.order.payment_transaction.settle.message2'|trans() }}</p>
     </div>
     {{ parent() }}
 {% endblock %}

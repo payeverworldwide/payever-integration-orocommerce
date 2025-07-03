@@ -6,7 +6,7 @@ namespace Payever\Bundle\PaymentBundle\Controller\Frontend;
 
 use Exception;
 use Psr\Log\LoggerInterface;
-use Oro\Bundle\LayoutBundle\Annotation\Layout;
+use Payever\Bundle\PaymentBundle\Attribute\Layout;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -34,9 +34,9 @@ class PaymentController extends AbstractController
 
     /**
      * @Route("/payment", name="payever_payment_payment")
-     * @Layout(vars={"iframeUrl"})
      * @return array|Response
      */
+    #[Layout(vars: ['iframeUrl'])]
     public function paymentAction(Request $request)
     {
         return [
@@ -46,15 +46,16 @@ class PaymentController extends AbstractController
 
     /**
      * @Route("/pending", name="payever_payment_pending")
-     * @Layout(vars={"api_order_update_status"})
      * @return array|Response
      */
+    #[Layout(vars: ['api_order_update_status', 'is_loan_transaction'])]
     public function pendingAction(Request $request)
     {
         $paymentId = $request->get(QueryConstant::PARAMETER_PAYMENT_ID);
         $accessIdentifier = $request->get(QueryConstant::PARAMETER_ACCESS_ID);
 
         return [
+            'is_loan_transaction' => $request->get(QueryConstant::PARAMETER_IS_LOAD_TRANSACTION),
             'api_order_update_status' => $this->getRouter()->generate(
                 self::PAYEVER_PAYMENT_STATUS_UPDATE,
                 [

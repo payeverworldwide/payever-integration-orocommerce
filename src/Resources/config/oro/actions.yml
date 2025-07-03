@@ -165,8 +165,8 @@ operations:
             constraints:
               - NotBlank: ~
               - Payever\Bundle\PaymentBundle\Validator\Constraints\LocalizedRange:
-                  min: $.minFormattedAmount
-                  max: $.maxFormattedAmount
+                  min: 0.1
+                  max: $.availableAmount
                   minMessage: $.minMessage
                   maxMessage: $.maxMessage
         noteMessage:
@@ -315,8 +315,8 @@ operations:
             constraints:
               - NotBlank: ~
               - Payever\Bundle\PaymentBundle\Validator\Constraints\LocalizedRange:
-                  min: $.minFormattedAmount
-                  max: $.maxFormattedAmount
+                  min: 0.1
+                  max: $.availableAmount
                   minMessage: $.minMessage
                   maxMessage: $.maxMessage
       attribute_default_values:
@@ -460,8 +460,8 @@ operations:
             constraints:
               - NotBlank: ~
               - Payever\Bundle\PaymentBundle\Validator\Constraints\LocalizedRange:
-                  min: $.minFormattedAmount
-                  max: $.maxFormattedAmount
+                  min: 0.1
+                  max: $.availableAmount
                   minMessage: $.minMessage
                   maxMessage: $.maxMessage
       attribute_default_values:
@@ -699,8 +699,8 @@ operations:
             constraints:
               - NotBlank: ~
               - Payever\Bundle\PaymentBundle\Validator\Constraints\LocalizedRange:
-                  min: $.minFormattedAmount
-                  max: $.maxFormattedAmount
+                  min: 0.1
+                  max: $.availableAmount
                   minMessage: $.minMessage
                   maxMessage: $.maxMessage
       attribute_default_values:
@@ -1020,9 +1020,14 @@ operations:
           method: getOrderInvoiceDate
           attribute: $.orderInvoiceDate
       - '@call_service_method':
+          service: oro_payment.provider.payment_transaction
+          method: getPaymentTransaction
+          method_parameters: [ $.data ]
+          attribute: $.paymentTransaction
+      - '@call_service_method':
           service: oro_payment.payment_method.composite_provider
           method: getPaymentMethod
-          method_parameters: [ $.data.paymentMethod ]
+          method_parameters: [ $.paymentTransaction.paymentMethod ]
           attribute: $.paymentMethod
     preconditions:
       '@and':
@@ -1038,9 +1043,6 @@ operations:
         type: string
       invoiceComment:
         label: Comment
-        type: string
-      invoiceEmail:
-        label: Send document
         type: string
     form_options:
       attribute_fields:
@@ -1058,8 +1060,6 @@ operations:
               - NotBlank: ~
         invoiceComment:
           form_type: Symfony\Component\Form\Extension\Core\Type\TextareaType
-        invoiceEmail:
-          form_type: Symfony\Component\Form\Extension\Core\Type\CheckboxType
       attribute_default_values:
         invoiceNumber: $.nextOrderInvoiceNumber
         invoiceDate: $.orderInvoiceDate

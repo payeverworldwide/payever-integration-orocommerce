@@ -36,7 +36,6 @@ class PurchasePaymentAction implements PaymentActionInterface
         try {
             $redirectUrl = $this->paymentProcessorService
                 ->setConfig($config)
-                ->saveExternalId($paymentTransaction)
                 ->getRedirectUrl($paymentTransaction);
         } catch (\Exception $exception) {
             $this->logger->critical('Purchase action error: ' . $exception->getMessage());

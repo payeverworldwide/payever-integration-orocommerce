@@ -15,6 +15,7 @@ layout:
             blockType: payever_pending_order
             options:
                 api_order_update_status: '=context["api_order_update_status"]'
+                is_loan_transaction: '=context["is_loan_transaction"]'
 
         - '@remove':
             id: page_title
