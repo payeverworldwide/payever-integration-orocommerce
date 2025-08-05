@@ -212,13 +212,30 @@ payever:
   order:
     action:
       payment_information.label: payever Information
+      note_message:
+        label: 'Notes'
     payment_transaction:
-      cancel:
-        message: Payment will be cancelled
       capture:
+        title: 'Charge The Customer'
+        #message: 'The customer will be charged {{ amount }}. Are you sure you want to continue?'
         message: Payment will be captured
+        button.okText: 'Yes, Charge'
+        result.success: 'The payment of %amount% has been captured successfully.'
+      cancel:
+        title: 'Cancel Authorization'
+        #message: 'The %amount% payment will be canceled. Are you sure you want to continue?'
+        message: Payment will be cancelled
+        button.okText: 'Yes, Cancel Authorization'
+        button.resetText: 'Back'
+        result.success: 'The payment of %amount% has been canceled successfully.'
       refund:
+        title: 'Refund Payment'
+        #message: 'The %amount% payment will be refunded. Are you sure you want to continue?'
         message: Payment will be refunded
+        button.okText: 'Yes, Refund Payment'
+        button.resetText: 'Back'
+        result.success: 'The payment of %amount% has been refunded successfully.'
+        #default_message
       settle:
         message: By setting this payment, you confirm that you have been received the outstanding amount from the customer to your bank account.
         message2: We will consider the payment successful and final, and the insurance will not pay out anything to you for this case, as you have received the full amount from the customer.

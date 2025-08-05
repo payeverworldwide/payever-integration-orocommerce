@@ -151,7 +151,24 @@ define(function(require) {
                 self.getAutocomplete().setAddressCallback(self.fillAddress.bind(self));
                 self.getAutocomplete().setClearFieldsCallback(self.clearFields.bind(self));
 
-                self.getCountryPicker();
+                if (self.options.companySearchType === 'dropdown' || self.options.companySearchType === 'mixed') {
+                    self.getCountryPicker();
+                }
+                if (self.options.companySearchType === 'popup') {
+                    const countryInput = self.getCountryElement();
+                    const countryElement = self.getCountryPickerElement();
+                    if (countryElement) {
+                        countryElement.value = countryInput.value;
+                    }
+
+                    $(countryInput).on('change', function () {
+                        if (countryElement) {
+                            countryElement.value = countryInput.value;
+                        }
+                        self.doSearch(1150);
+                    });
+                }
+
                 self.getCompanySearchPopup();
             });
         },
@@ -431,7 +448,7 @@ define(function(require) {
                 companyIdElement.dispatchEvent(new Event('change'));
             }
 
-            if (countryElement) {
+            if (countryElement && countryElement.value !== company.address.country_code) {
                 // change event need to be fired because the state field get only visible after selecting a country
                 $(countryElement).on('value:changed', function () {
                     console.log('Value changed');

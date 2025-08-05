@@ -2,6 +2,10 @@
     {{ form_widget(form) }}
 {% endblock %}
 
+{% block payever_synchronize_widget_errors %}
+
+{% endblock %}
+
 {% block payever_synchronize_widget_widget %}
     {% set options = {
             'synchronizationUrl': path('payever_payment_synchronize')

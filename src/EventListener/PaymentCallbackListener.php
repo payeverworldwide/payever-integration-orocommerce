@@ -113,7 +113,8 @@ class PaymentCallbackListener
 
         $request = $this->requestStack->getCurrentRequest();
         $session = $this->requestStack->getSession();
-        if (QueryConstant::CALLBACK_TYPE_CANCEL === $request->get(QueryConstant::PARAMETER_TYPE)) {
+        $type = $request->get(QueryConstant::PARAMETER_TYPE);
+        if (QueryConstant::CALLBACK_TYPE_CANCEL === $type) {
             $this->logger->info(
                 'Payment has been cancelled by customer.',
                 [$paymentTransaction->getEntityIdentifier()]
@@ -149,7 +150,7 @@ class PaymentCallbackListener
             }
         }
 
-        if (QueryConstant::CALLBACK_TYPE_FAILURE === $request->get(QueryConstant::PARAMETER_TYPE)) {
+        if (QueryConstant::CALLBACK_TYPE_FAILURE === $type) {
             $this->logger->info(
                 'Payment failed.',
                 [$paymentTransaction->getEntityIdentifier()]

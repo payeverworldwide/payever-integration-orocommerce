@@ -16,7 +16,7 @@ class SalutationConstant
      * @param string|null $salutation
      * @return string|null
      */
-    public static function getValidSalutation(string $salutation = null): ?string
+    public static function getValidSalutation(?string $salutation = null): ?string
     {
         if (!$salutation) {
             return null;

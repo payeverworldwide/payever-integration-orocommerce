@@ -136,9 +136,9 @@ class PaymentOptionsService
                 ->setIsShippingAddressEquality($paymentMethod->getShippingAddressEquality())
                 ->setMax($paymentMethod->getMax())
                 ->setMin($paymentMethod->getMin())
-                ->setIsAcceptFee($paymentMethod->getAcceptFee())
-                ->setVariableFee($paymentMethod->getVariableFee())
-                ->setFixedFee($paymentMethod->getFixedFee());
+                ->setIsAcceptFee((bool) $paymentMethod->getAcceptFee())
+                ->setVariableFee((float) $paymentMethod->getVariableFee())
+                ->setFixedFee((float) $paymentMethod->getFixedFee());
 
             $integration = new Integration();
             $integration

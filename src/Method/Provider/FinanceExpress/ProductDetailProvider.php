@@ -47,7 +47,7 @@ class ProductDetailProvider
      *
      * @return array
      */
-    public function getProductData(Product $product, Localization $localization = null): array
+    public function getProductData(Product $product, ?Localization $localization = null): array
     {
         if (!$product->getSku()) {
             return [];

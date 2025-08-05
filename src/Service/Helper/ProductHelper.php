@@ -54,7 +54,13 @@ class ProductHelper
      */
     public function getProduct(string $sku): ?Product
     {
-        return $this->getProductRepository()->findOneBySku($sku);
+        $repository = $this->getProductRepository();
+        if (method_exists($repository, 'findOneBySku')) {
+            return $repository->findOneBySku($sku);
+        }
+
+        // OroCommerce 6.0+
+        return $repository->findOneBy(['sku' => $sku]);
     }
 
     /**

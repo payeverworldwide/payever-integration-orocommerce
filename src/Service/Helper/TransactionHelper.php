@@ -9,6 +9,7 @@ use Oro\Bundle\EntityBundle\ORM\Registry;
 use Oro\Bundle\OrderBundle\Entity\Order;
 use Oro\Bundle\OrderBundle\Entity\Repository\OrderRepository;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
+use Oro\Bundle\PaymentBundle\Entity\Repository\PaymentTransactionRepository;
 use Oro\Bundle\PaymentBundle\Provider\PaymentTransactionProvider;
 
 class TransactionHelper
@@ -38,6 +39,11 @@ class TransactionHelper
     public function getOrderByIdentifier(string $identifier): ?Order
     {
         return $this->getOrderRepository()->findOneBy(['identifier' => $identifier]);
+    }
+
+    public function getPaymentTransactionByID(int $id): ?PaymentTransaction
+    {
+        return $this->getPaymentTransactionRepository()->findOneBy(['id' => $id]);
     }
 
     /**
@@ -148,5 +154,12 @@ class TransactionHelper
         return $this->doctrine
             ->getManagerForClass(Order::class)
             ->getRepository(Order::class);
+    }
+
+    public function getPaymentTransactionRepository(): ?PaymentTransactionRepository
+    {
+        return $this->doctrine
+            ->getManagerForClass(PaymentTransaction::class)
+            ->getRepository(PaymentTransaction::class);
     }
 }

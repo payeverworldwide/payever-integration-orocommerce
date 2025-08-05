@@ -62,7 +62,7 @@ operations:
                 stringSuffix: $.noteMessage
             - '@create_note': [ $.note, $.order ]
             - '@flash_message':
-                message: oro.order.payment_transaction.cancel.result.success
+                message: payever.order.payment_transaction.cancel.result.success
                 message_parameters:
                   'amount': $.amountWithCurrency
                 type: 'success'
@@ -72,12 +72,12 @@ operations:
           message: '$.result[message]'
           type: 'error'
     frontend_options:
-      title: oro.order.payment_transaction.cancel.title
+      title: payever.order.payment_transaction.cancel.title
       template: '@OroOrder/Action/cancelTransaction.html.twig'
       options:
         allowMaximize: false
-        okText: oro.order.payment_transaction.cancel.button.okText
-        cancelText: oro.order.payment_transaction.cancel.button.resetText
+        okText: payever.order.payment_transaction.cancel.button.okText
+        cancelText: payever.order.payment_transaction.cancel.button.resetText
 
   payeverpayment_order_payment_transaction_cancel_amount:
     #extends: oro_order_payment_transaction_cancel
@@ -151,7 +151,7 @@ operations:
         - '@equal': [ $.isActionAllowed, true ]
     attributes:
       noteMessage:
-        label: oro.order.action.note_message.label
+        label: payever.order.action.note_message.label
         type: string
       cancelAmount:
         label: Amount
@@ -185,7 +185,7 @@ operations:
       - '@flash_message':
           conditions:
             '@equal': [ '$.result[successful]', true ]
-          message: oro.order.payment_transaction.cancel.result.success
+          message: payever.order.payment_transaction.cancel.result.success
           message_parameters:
             'amount': $.cancelAmount
           type: 'success'
@@ -195,12 +195,12 @@ operations:
           message: '$.result[message]'
           type: 'error'
     frontend_options:
-      title: oro.order.payment_transaction.cancel.title
+      title: payever.order.payment_transaction.cancel.title
       template: '@PayeverPayment/Action/cancelTransaction.html.twig'
       options:
         allowMaximize: false
-        okText: oro.order.payment_transaction.cancel.button.okText
-        cancelText: oro.order.payment_transaction.cancel.button.resetText
+        okText: payever.order.payment_transaction.cancel.button.okText
+        cancelText: payever.order.payment_transaction.cancel.button.resetText
 
   payeverpayment_order_payment_transaction_capture:
     extends: oro_order_payment_transaction_capture
@@ -298,7 +298,7 @@ operations:
         label: Amount
         type: string
       noteMessage:
-        label: oro.order.action.note_message.label
+        label: payever.order.action.note_message.label
         type: string
     form_options:
       attribute_fields:
@@ -329,7 +329,7 @@ operations:
       - '@flash_message':
           conditions:
             '@equal': [ '$.result[successful]', true ]
-          message: oro.order.payment_transaction.capture.result.success
+          message: payever.order.payment_transaction.capture.result.success
           message_parameters:
             'amount': $.captureAmount
           type: 'success'
@@ -339,12 +339,12 @@ operations:
           message: '$.result[message]'
           type: 'error'
     frontend_options:
-      title: oro.order.payment_transaction.capture.title
+      title: payever.order.payment_transaction.capture.title
       template: '@PayeverPayment/Action/captureTransaction.html.twig'
       options:
         allowMaximize: false
-        okText: oro.order.payment_transaction.capture.button.okText
-        cancelText: oro.order.payment_transaction.cancel.button.resetText
+        okText: payever.order.payment_transaction.capture.button.okText
+        cancelText: payever.order.payment_transaction.cancel.button.resetText
 
   payeverpayment_order_payment_transaction_refund:
     extends: oro_order_payment_transaction_refund
@@ -443,7 +443,7 @@ operations:
         label: Amount
         type: string
       noteMessage:
-        label: oro.order.action.note_message.label
+        label: payever.order.action.note_message.label
         type: string
     form_options:
       attribute_fields:
@@ -484,7 +484,7 @@ operations:
                 stringSuffix: $.noteMessage
             - '@create_note': [ $.note, $.order ]
             - '@flash_message':
-                message: oro.order.payment_transaction.refund.result.success
+                message: payever.order.payment_transaction.refund.result.success
                 message_parameters:
                   'amount': $.refundAmount
                 type: 'success'
@@ -494,12 +494,12 @@ operations:
           message: '$.result[message]'
           type: 'error'
     frontend_options:
-      title: oro.order.payment_transaction.refund.title
+      title: payever.order.payment_transaction.refund.title
       template: '@PayeverPayment/Action/refundTransaction.html.twig'
       options:
         allowMaximize: false
-        okText: oro.order.payment_transaction.refund.button.okText
-        cancelText: oro.order.payment_transaction.refund.button.resetText
+        okText: payever.order.payment_transaction.refund.button.okText
+        cancelText: payever.order.payment_transaction.refund.button.resetText
 
   payeverpayment_order_payment_transaction_settle:
     label: payever.payment.settle

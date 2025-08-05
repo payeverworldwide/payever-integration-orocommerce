@@ -9,9 +9,10 @@ use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Payever\Bundle\PaymentBundle\Method\Config\Provider\PayeverConfigProvider;
 use Payever\Bundle\PaymentBundle\Method\Provider\PayeverMethodProvider;
 use Payever\Bundle\PaymentBundle\Service\Payment\PaymentProcessorService;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Payever\Bundle\PaymentBundle\Service\Helper\TransactionHelper;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
 class PaymentTransactionController extends AbstractController
@@ -21,20 +22,30 @@ class PaymentTransactionController extends AbstractController
      * @see Resources/views/PaymentTransaction/widget/info.html.twig
      *
      * @Route("/info/{paymentTransactionId}/", name="payever_payment_transaction_info")
-     * @ParamConverter("paymentTransaction", class="OroPaymentBundle:PaymentTransaction", options={"id" = "paymentTransactionId"})
      * @Template
      */
     public function infoAction(
-        PaymentTransaction $paymentTransaction,
+        Request $request,
+        TransactionHelper $transactionHelper,
         PayeverMethodProvider $payverMethodProvider,
         PayeverConfigProvider $payeverConfigProvider,
         PaymentProcessorService $paymentProcessor
     ) {
-        $paymentMethod = $payverMethodProvider->getPaymentMethod(
-            $paymentTransaction->getPaymentMethod()
-        );
-
         try {
+            $id = (int) $request->get('paymentTransactionId');
+            if (!$id) {
+                throw new \Exception('Payment transaction id not found');
+            }
+
+            $paymentTransaction = $transactionHelper->getPaymentTransactionByID($id);
+            if (!$paymentTransaction) {
+                throw new \Exception('Payment transaction not found');
+            }
+
+            $paymentMethod = $payverMethodProvider->getPaymentMethod(
+                $paymentTransaction->getPaymentMethod()
+            );
+
             $payment = $paymentProcessor
                 ->setConfig($payeverConfigProvider->getPaymentConfig($paymentMethod->getIdentifier()))
                 ->retrievePayment($paymentTransaction);
@@ -53,7 +64,7 @@ class PaymentTransactionController extends AbstractController
                     'application_number' => $details->getApplicationNumber(),
                     'application_status' => $details->getApplicationStatus(),
                     'usage_text' => $details->getUsageText(),
-                ]
+                ],
             ];
         } catch (\Exception $exception) {
             return [
@@ -68,7 +79,7 @@ class PaymentTransactionController extends AbstractController
                     'application_number' => '',
                     'application_status' => '',
                     'usage_text' => '',
-                ]
+                ],
             ];
         }
     }
@@ -77,9 +88,10 @@ class PaymentTransactionController extends AbstractController
     {
         return array_merge(
             [
+                TransactionHelper::class,
                 PayeverMethodProvider::class,
                 PayeverConfigProvider::class,
-                PaymentProcessorService::class
+                PaymentProcessorService::class,
             ],
             parent::getSubscribedServices()
         );
