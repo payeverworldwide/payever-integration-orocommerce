@@ -67,7 +67,7 @@ class TransactionBuilderService
             ->setTransactionOptions($sourceTransaction->getTransactionOptions())
             ->setSuccessful(true)
             ->setActive(false)
-             ->setResponse($response);
+            ->setResponse($response);
         $this->paymentTransactionProvider->savePaymentTransaction($paymentTransaction);
 
         $sourceTransaction->setActive(true);
@@ -181,16 +181,9 @@ class TransactionBuilderService
         array $response
     ): PaymentTransaction {
         // Get source transaction
-        try {
-            $sourceTransaction = $this->transactionHelper->getPaymentTransaction(
-                $order,
-                PaymentMethodInterface::AUTHORIZE
-            );
-        } catch (\Exception $exception) {
-            $sourceTransaction = $this->transactionHelper->getPaymentTransaction(
-                $order,
-                PaymentMethodInterface::CAPTURE
-            );
+        $sourceTransaction = $this->transactionHelper->getPaymentActiveTransaction($order);
+        if (!$sourceTransaction) {
+            throw new \LogicException('Impossible to get source transaction.');
         }
 
         // Create transaction
@@ -220,11 +213,7 @@ class TransactionBuilderService
         array $response
     ): PaymentTransaction {
         // Get source transaction
-        $sourceTransaction = $this->transactionHelper->getPaymentTransaction(
-            $order,
-            PaymentMethodInterface::CAPTURE
-        );
-
+        $sourceTransaction = $this->transactionHelper->getPaymentActiveTransaction($order);
         if (!$sourceTransaction) {
             throw new \LogicException('Impossible to get source transaction.');
         }
@@ -252,11 +241,7 @@ class TransactionBuilderService
         array $response
     ): PaymentTransaction {
         // Get source transaction
-        $sourceTransaction = $this->transactionHelper->getPaymentTransaction(
-            $order,
-            PaymentMethodInterface::CAPTURE
-        );
-
+        $sourceTransaction = $this->transactionHelper->getPaymentActiveTransaction($order);
         if (!$sourceTransaction) {
             throw new \LogicException('Impossible to get source transaction.');
         }
@@ -285,11 +270,7 @@ class TransactionBuilderService
         array $response
     ): PaymentTransaction {
         // Get source transaction
-        $sourceTransaction = $this->transactionHelper->getPaymentTransaction(
-            $order,
-            PaymentMethodInterface::CAPTURE
-        );
-
+        $sourceTransaction = $this->transactionHelper->getPaymentActiveTransaction($order);
         if (!$sourceTransaction) {
             throw new \LogicException('Impossible to get source transaction.');
         }

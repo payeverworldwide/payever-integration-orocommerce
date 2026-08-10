@@ -2,12 +2,21 @@ services:
   _defaults:
     public: true
 
+  Payever\Bundle\PaymentBundle\Controller\Frontend\PluginCommandController:
+    calls:
+      - [ setContainer, [ '@Psr\Container\ContainerInterface' ] ]
+    tags:
+      - { name: container.service_subscriber }
+      - { name: container.service_subscriber, id: oro_config.manager, key: Oro\Bundle\ConfigBundle\Config\ConfigManager }
+      - { name: container.service_subscriber, id: payever.sdk.payments.third_party_plugins_api_client, key: Payever\Sdk\Payments\ThirdPartyPluginsApiClient }
+      - { name: container.service_subscriber, id: payever.service.job_handler.payment_command, key: Payever\Bundle\PaymentBundle\Service\JobHandler\PaymentCommandJobHandler }
+      - { name: controller.service_arguments }
+
   Payever\Bundle\PaymentBundle\Controller\PaymentTransactionController:
     calls:
       - [setContainer, ['@Psr\Container\ContainerInterface']]
     tags:
       - { name: container.service_subscriber }
-      - { name: container.service_subscriber, id: Payever\Bundle\PaymentBundle\Method\Provider\PayeverMethodProvider }
       - { name: controller.service_arguments }
 
   Payever\Bundle\PaymentBundle\Controller\SynchronizationController:
@@ -37,13 +46,28 @@ services:
       - { name: container.service_subscriber, id: Payever\Bundle\PaymentBundle\Service\LogCollector }
       - { name: controller.service_arguments }
 
-  Payever\Bundle\PaymentBundle\Controller\Frontend\PaymentController:
+  Payever\Bundle\PaymentBundle\Controller\Frontend\CallbackController:
     calls:
-      - [setContainer, ['@Psr\Container\ContainerInterface']]
-      - [setServiceProvider, ['@payever.service.api.service_provider']]
+      - [ setContainer, [ '@Psr\Container\ContainerInterface' ] ]
     tags:
       - { name: container.service_subscriber }
       - { name: container.service_subscriber, id: payever.service.logger, key: Psr\Log\LoggerInterface }
+      - { name: controller.service_arguments }
+
+  Payever\Bundle\PaymentBundle\Controller\Frontend\PaymentController:
+    calls:
+      - [ setContainer, [ '@Psr\Container\ContainerInterface' ] ]
+    tags:
+      - { name: container.service_subscriber }
+      - { name: controller.service_arguments }
+
+  Payever\Bundle\PaymentBundle\Controller\Frontend\NotificationController:
+    calls:
+      - [ setContainer, [ '@Psr\Container\ContainerInterface' ] ]
+    tags:
+      - { name: container.service_subscriber }
+      - { name: container.service_subscriber, id: payever.service.logger, key: Psr\Log\LoggerInterface }
+      - { name: controller.service_arguments }
 
   Payever\Bundle\PaymentBundle\Controller\Frontend\FinanceExpressController:
     calls:

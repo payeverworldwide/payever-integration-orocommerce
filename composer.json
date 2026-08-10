@@ -16,9 +16,9 @@
         "php":">=8.2.0",
         "ext-zip": "*",
         "oro/commerce": "5.1.*|6.0.*|6.1.*",
-        "payever/core-sdk-php": "2.1.0",
-        "payever/plugins-sdk-php": "2.0.0",
-        "payever/payments-sdk-php": "2.5.1",
+        "payever/core-sdk-php": "2.2.0",
+        "payever/plugins-sdk-php": "2.0.1",
+        "payever/payments-sdk-php": "2.8.3",
         "payever/products-sdk-php": "2.0.0",
         "setasign/fpdf": "^1.8"
     },

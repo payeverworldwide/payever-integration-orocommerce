@@ -83,6 +83,10 @@ class CapturePaymentAction implements PaymentActionInterface
             $sourceTransaction->setActive(true);
             $paymentTransaction->setActive(false);
 
+            if ($config->getIsB2BMethod() && str_contains($config->getPaymentMethod(), 'allianz')) {
+                $paymentTransaction->setAction(TransactionHelper::CAPTURE_B2B);
+            }
+
             $paymentTransaction->setTransactionOptions($sourceTransaction->getTransactionOptions());
             $this->paymentTransactionProvider->savePaymentTransaction($paymentTransaction);
         } catch (\Exception $exception) {

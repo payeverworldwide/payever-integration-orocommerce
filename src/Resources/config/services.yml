@@ -52,6 +52,7 @@ services:
     class: Payever\Bundle\PaymentBundle\Service\Api\ServiceProvider
     public: true
     arguments:
+      - '@payever.service.api.plugins.plugin_registry_info_provider'
       - '@payever.service.api.token_list'
       - '@oro_config.manager'
       - '@payever.service.logger'
@@ -60,6 +61,50 @@ services:
   payever.sdk.payments.widgets_api_client:
     class: Payever\Sdk\Payments\WidgetsApiClient
     factory: [ '@payever.service.api.service_provider', getPaymentWidgetsApiClient ]
+
+  # Plugin Registry Info Provider
+  payever.service.api.plugins.plugin_registry_info_provider:
+    class: Payever\Bundle\PaymentBundle\Service\Api\PluginRegistryInfoProvider
+    public: true
+    arguments:
+      - '@payever.service.helper.data'
+      - '@oro_config.manager'
+      - '@router'
+
+  # Plugins API Client
+  payever.sdk.plugins.plugins_api_client:
+    class: Payever\Sdk\Plugins\PluginsApiClient
+    factory: [ '@payever.service.api.service_provider', getPluginsApiClient ]
+
+  # ThirdParty Plugins Api Client
+  payever.sdk.payments.third_party_plugins_api_client:
+    class: Payever\Sdk\Payments\ThirdPartyPluginsApiClient
+    factory: [ '@payever.service.api.service_provider', getThirdPartyPluginsApiClient ]
+
+  # Plugin Command Manager
+  payever.sdk.plugins.command.plugin_command_manager:
+    class: Payever\Sdk\Plugins\Command\PluginCommandManager
+    public: true
+    arguments:
+      - '@payever.sdk.plugins.plugins_api_client'
+      - '@payever.service.api.plugins.plugin_command_executor'
+      - '@payever.service.logger'
+
+  payever.service.api.plugins.plugin_command_executor:
+    class: Payever\Bundle\PaymentBundle\Service\Api\PluginCommandExecutor
+    public: true
+    arguments:
+      - '@oro_config.global'
+
+  # Execute Plugin Commands
+  payever.service.job_handler.payment_command:
+    class: Payever\Bundle\PaymentBundle\Service\JobHandler\PaymentCommandJobHandler
+    public: true
+    arguments:
+      - '@oro_config.global'
+      - '@payever.sdk.plugins.plugins_api_client'
+      - '@payever.sdk.plugins.command.plugin_command_manager'
+      - '@payever.service.logger'
 
   # Data Helper
   payever.service.helper.data:
@@ -122,6 +167,16 @@ services:
     alias: payever.service.helper.product
 
   # PaymentMethod Helper
+  payever.service.helper.payment:
+    class: Payever\Bundle\PaymentBundle\Service\Helper\PaymentHelper
+    public: true
+    arguments:
+      - '@payever.service.api.service_provider'
+
+  Payever\Bundle\PaymentBundle\Service\Helper\PaymentHelper:
+    alias: payever.service.helper.payment
+
+  # PaymentMethod Helper
   payever.service.helper.payment_method:
     class: Payever\Bundle\PaymentBundle\Service\Helper\PaymentMethodHelper
     public: true
@@ -129,6 +184,7 @@ services:
       - '@doctrine'
       - '@payever.payment_method_provider.payever'
       - '@payever.payment_method.config.provider'
+      - '@oro_payment.provider.payment_transaction'
 
   Payever\Bundle\PaymentBundle\Service\Helper\PaymentMethodHelper:
     alias: payever.service.helper.payment_method
@@ -167,22 +223,6 @@ services:
   Payever\Bundle\PaymentBundle\Service\Helper\AddressHelper:
     alias: payever.service.helper.address
 
-  # Populate Request V2
-  payever.service.payment.populate.request.v2:
-    class: Payever\Bundle\PaymentBundle\Service\Payment\Request\PopulatePaymentRequestV2
-    public: true
-    arguments:
-      - '@payever.service.api.service_provider'
-      - '@oro_config.manager'
-      - '@payever.service.helper.data'
-      - '@payever.service.helper.url'
-      - '@payever.service.helper.order_item'
-      - '@oro_entity.doctrine_helper'
-      - '@oro_locale.helper.localization'
-
-  Payever\Bundle\PaymentBundle\Service\Payment\Request\PopulatePaymentRequestV2:
-    alias: payever.service.payment.populate.request.v2
-
   # Populate Request V3
   payever.service.payment.populate.request.v3:
     class: Payever\Bundle\PaymentBundle\Service\Payment\Request\PopulatePaymentRequestV3
@@ -193,11 +233,9 @@ services:
       - '@payever.service.helper.data'
       - '@payever.service.helper.url'
       - '@payever.service.helper.order_item'
-      - '@oro_entity.doctrine_helper'
-      - '@payever.service.payment.transaction_status_service'
-      - '@oro_payment.provider.payment_transaction'
       - '@oro_customer.provider.user_logging_info_provider'
-      - '@request_stack'
+      - '@oro_pricing.subtotal_processor.total_processor_provider'
+      - '@oro_locale.helper.localization'
 
   Payever\Bundle\PaymentBundle\Service\Payment\Request\PopulatePaymentRequestV3:
     alias: payever.service.payment.populate.request.v3
@@ -207,14 +245,13 @@ services:
     class: Payever\Bundle\PaymentBundle\Service\Payment\PaymentProcessorService
     public: true
     arguments:
-      - '@payever.service.api.service_provider'
       - '@oro_config.manager'
       - '@payever.service.helper.url'
-      - '@oro_entity.doctrine_helper'
+      - '@payever.service.helper.payment'
+      - '@payever.service.helper.transaction'
+      - '@payever.service.management.invoice'
       - '@payever.service.payment.transaction_status_service'
-      - '@payever.service.payment.populate.request.v2'
       - '@payever.service.payment.populate.request.v3'
-      - '@payever.service.logger'
 
   Payever\Bundle\PaymentBundle\Service\Payment\PaymentProcessorService:
     alias: payever.service.payment.payment_processor
@@ -227,7 +264,6 @@ services:
       - '@oro_payment.provider.payment_transaction'
       - '@payever.service.helper.transaction'
       - '@payever.service.management.order'
-      - '@request_stack'
       - '@payever.service.logger'
 
   Payever\Bundle\PaymentBundle\Service\Payment\TransactionStatusService:
@@ -482,6 +518,7 @@ services:
       - '@payever.service.factory.order_total'
       - '@payever.service.factory.order_item'
       - '@payever.service.helper.order_item'
+      - '@payever.service.management.invoice'
 
   Payever\Bundle\PaymentBundle\Service\Management\OrderManager:
     alias: payever.service.management.order
@@ -496,6 +533,33 @@ services:
 
   Payever\Bundle\PaymentBundle\Service\Management\PaymentActionManager:
     alias: payever.service.management.payment_action
+
+  payever.service.management.invoice:
+    class: Payever\Bundle\PaymentBundle\Service\Management\InvoiceManager
+    public: true
+    arguments:
+      - '@payever.service.payment_invoice'
+      - '@payever.repository.order_invoice'
+      - '@payever.service.helper.payment_method'
+      - '@payever.service.logger'
+
+  Payever\Bundle\PaymentBundle\Service\Management\InvoiceManager:
+    alias: payever.service.management.invoice
+
+  payever.service.management.checkout:
+    class: Payever\Bundle\PaymentBundle\Service\Management\CheckoutManager
+    public: true
+    arguments:
+      - '@doctrine.orm.entity_manager'
+      - '@payever.service.payment.payment_processor'
+      - '@payever.payment_method.config.provider'
+      - '@oro_workflow.manager'
+      - '@oro_workflow.registry'
+      - '@oro_checkout.data_provider.converter.checkout_to_order'
+      - '@payever.service.helper.url'
+
+  Payever\Bundle\PaymentBundle\Service\Management\CheckoutManager:
+    alias: payever.service.management.checkout
 
   # Entities
   Payever\Bundle\PaymentBundle\Entity\OrderTotals:
@@ -563,9 +627,13 @@ services:
     class: Payever\Bundle\PaymentBundle\Service\Payment\Notification\NotificationHandler
     public: true
     arguments:
+      - '@payever.service.helper.transaction'
       - '@payever.service.payment.transaction_status_service'
       - '@payever.service.management.payment_action'
       - '@payever_payment.notification_handler.registry'
+      - '@payever_payment.notification_handler.b2b_payment'
+      - '@payever.service.management.checkout'
+      - '@payever.service.helper.order'
       - '@payever.service.logger'
 
   Payever\Bundle\PaymentBundle\Service\Payment\Notification\NotificationRequestProcessor:

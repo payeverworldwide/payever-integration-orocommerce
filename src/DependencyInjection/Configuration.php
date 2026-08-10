@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Payever\Bundle\PaymentBundle\DependencyInjection;
 
 use Oro\Bundle\ConfigBundle\DependencyInjection\SettingsBuilder;
+use Payever\Bundle\PaymentBundle\Constant\LanguageConstant;
 use Payever\Bundle\PaymentBundle\Constant\LogLevelConstant;
 use Payever\Bundle\PaymentBundle\Constant\SettingsConstant;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -31,13 +32,16 @@ class Configuration implements ConfigurationInterface
                 'is_redirect' => ['type' => 'boolean', 'value' => false],
                 'mode' => ['value' => SettingsConstant::MODE_SANDBOX],
                 'log_level' => ['value' => LogLevelConstant::DEBUG],
-                'api_version' => ['value' => SettingsConstant::API_V3],
+                'checkout_language' => ['value' => LanguageConstant::STORE],
+                'overwrite_payment_labels' => ['type' => 'boolean', 'value' => true],
                 'oauth_token' => ['value' => ''],
                 'sandbox_url' => ['value' => ''],
                 'live_url' => ['value' => ''],
+                'widget_url' => ['value' => ''],
                 'enable_apm' => ['type' => 'boolean', 'value' => false],
                 'apm_secret_sandbox' => ['value' => ''],
                 'apm_secret_live' => ['value' => ''],
+                'command_timestamp' => ['value' => ''],
                 'fe_product' => ['type' => 'boolean', 'value' => false],
                 'fe_cart' => ['type' => 'boolean', 'value' => false],
                 'fe_widget_id' => ['value' => ''],

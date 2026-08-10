@@ -63,8 +63,10 @@ class ShipAmountHandler extends NotificationHandlerAbstract implements HandlerIn
             $notificationResultEntity->toArray()
         );
         $this->logger->info('Transaction has been registered', [$paymentTransaction->getId()]);
-
         $this->logger->info(NotificationRequestProcessor::LOG_PREFIX . ' Captured amount. Amount: ' . $captureAmount);
+
+        // Create invoice if applicable
+        $this->orderManager->addInvoiceIfApplicable($order, $paymentId);
 
         return [
             'successful' => true,

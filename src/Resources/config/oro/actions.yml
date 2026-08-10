@@ -432,7 +432,7 @@ operations:
       '@and':
         - '@acl_granted': ['REFUND_PAYMENTS', $.order]
         - '@equal': [ $.data.entity_class, 'Oro\Bundle\OrderBundle\Entity\Order' ]
-        - '@equal': [ $.data.action, 'capture' ]
+        - '@in': [ $.data.action, ['capture', 'capture_b2b'] ]
         - '@equal': [ $.data.active, false ]
         - '@equal': [ $.data.successful, true ]
         - '@not_empty': $.paymentMethod
@@ -570,7 +570,7 @@ operations:
       '@and':
         - '@acl_granted': ['CHARGE_AUTHORIZED_PAYMENTS', $.order]
         - '@equal': [ $.data.entity_class, 'Oro\Bundle\OrderBundle\Entity\Order' ]
-        - '@equal': [ $.data.action, 'capture' ]
+        - '@in': [ $.data.action, ['capture', 'capture_b2b'] ]
         - '@equal': [ $.data.active, false ]
         - '@equal': [ $.data.successful, true ]
         - '@not_empty': $.paymentMethod
@@ -680,7 +680,7 @@ operations:
       '@and':
         - '@acl_granted': ['CHARGE_AUTHORIZED_PAYMENTS', $.order]
         - '@equal': [ $.data.entity_class, 'Oro\Bundle\OrderBundle\Entity\Order' ]
-        - '@equal': [ $.data.action, 'capture' ]
+        - '@in': [ $.data.action, ['capture', 'capture_b2b'] ]
         - '@equal': [ $.data.active, false ]
         - '@equal': [ $.data.successful, true ]
         - '@not_empty': $.paymentMethod
@@ -907,12 +907,14 @@ operations:
   # Claim Operation
   payever_payment_claim:
     label: payever.actions.btn.claim.label
-    routes:
-      - oro_order_view
+    applications: [ default ]
+    datagrids:
+      - order-payment-transactions-grid
     frontend_options:
       template: '@PayeverPayment/Action/claim.html.twig'
     button_options:
-      icon: fa-money
+      icon: fa-clipboard
+      class: 'btn-claim'
     attributes:
       isDisputed:
         label: payever.actions.claim.isDisputed
@@ -925,14 +927,25 @@ operations:
             required: false
     preactions:
       - '@call_service_method':
+          service: oro_payment.payment_method.composite_provider
+          method: getPaymentMethod
+          method_parameters: [ $.data.paymentMethod ]
+          attribute: $.paymentMethod
+      - '@call_service_method':
           service: payever.service.payment.allowed_actions
-          method: isOrderActionAllowed
+          method: isActionAllowed
           method_parameters: [ $.data, 'claim' ]
           attribute: $.isOrderActionAllowed
     preconditions:
       '@and':
         - '@acl_granted': [ 'CLAIM_PAYMENTS', $.data ]
         - '@equal': [ $.isOrderActionAllowed, true ]
+        - '@not_empty': $.paymentMethod
+        - '@equal': [ $.data.entity_class, 'Oro\Bundle\OrderBundle\Entity\Order' ]
+        - '@in': [ $.data.action, ['capture', 'capture_b2b'] ]
+        - '@equal': [ $.data.active, false ]
+        - '@equal': [ $.data.successful, true ]
+        - '@instanceof': [ $.paymentMethod, 'Payever\Bundle\PaymentBundle\Method\Payever' ]
     actions:
       - '@call_service_method':
           service: payever.provider.payment_action
@@ -953,12 +966,14 @@ operations:
   # Claim Upload Operation
   payever_payment_claim_upload:
     label: payever.actions.btn.claim_upload.label
-    routes:
-      - oro_order_view
+    applications: [ default ]
+    datagrids:
+      - order-payment-transactions-grid
     frontend_options:
       template: '@PayeverPayment/Action/claimUpload.html.twig'
     button_options:
-      icon: fa-money
+      icon: fa-file-pdf-o
+      class: 'btn-claim-upload'
     attributes:
       peClaimUpload:
         label: payever.actions.modal.claim_upload_hint
@@ -975,14 +990,25 @@ operations:
         peClaimUpload: $.orderClaimUpload
     preactions:
       - '@call_service_method':
+          service: oro_payment.payment_method.composite_provider
+          method: getPaymentMethod
+          method_parameters: [ $.data.paymentMethod ]
+          attribute: $.paymentMethod
+      - '@call_service_method':
           service: payever.service.payment.allowed_actions
-          method: isOrderActionAllowed
+          method: isActionAllowed
           method_parameters: [ $.data, 'claim_upload' ]
           attribute: $.isOrderActionAllowed
     preconditions:
       '@and':
         - '@acl_granted': [ 'CLAIM_UPLOAD_PAYMENTS', $.data ]
         - '@equal': [ $.isOrderActionAllowed, true ]
+        - '@not_empty': $.paymentMethod
+        - '@equal': [ $.data.entity_class, 'Oro\Bundle\OrderBundle\Entity\Order' ]
+        - '@in': [ $.data.action, ['capture', 'capture_b2b'] ]
+        - '@equal': [ $.data.active, false ]
+        - '@equal': [ $.data.successful, true ]
+        - '@instanceof': [ $.paymentMethod, 'Payever\Bundle\PaymentBundle\Method\Payever' ]
     conditions:
       '@payever_claim_upload_form_valid':
     actions:

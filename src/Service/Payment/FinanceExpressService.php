@@ -257,7 +257,7 @@ class FinanceExpressService
             $this->logger->info('Created payment transaction: ' .  $paymentTransaction->getId(), [$order->getId()]);
         }
 
-        $this->transactionStatusService->persistTransactionStatus($payment);
+        $this->transactionStatusService->persistTransactionStatus($payment, $order);
 
         $this->lock->releaseLock($paymentId);
 

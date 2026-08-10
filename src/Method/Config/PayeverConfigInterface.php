@@ -43,4 +43,8 @@ interface PayeverConfigInterface extends PaymentConfigInterface
     public function getFixedFee(): float;
 
     public function getVariableFee(): float;
+
+    public function getPaymentIssuer(): string;
+
+    public function getBusinessType(): string;
 }

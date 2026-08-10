@@ -7,6 +7,7 @@ namespace Payever\Bundle\PaymentBundle\Service\Management;
 use Doctrine\ORM\EntityManager;
 use Oro\Bundle\EntityBundle\ORM\Registry;
 use Oro\Bundle\OrderBundle\Entity\Order;
+use Payever\Bundle\PaymentBundle\Entity\OrderInvoice;
 use Payever\Bundle\PaymentBundle\Service\Factory\OrderTotalFactory;
 use Payever\Bundle\PaymentBundle\Service\Factory\OrderItemFactory;
 use Payever\Bundle\PaymentBundle\Entity\OrderItems;
@@ -45,18 +46,25 @@ class OrderManager
      */
     private OrderItemHelper $orderItemHelper;
 
+    /**
+     * @var InvoiceManager
+     */
+    private InvoiceManager $invoiceManager;
+
     public function __construct(
         Registry $doctrine,
         EntityManager $entityManager,
         OrderTotalFactory $orderTotalFactory,
         OrderItemFactory $orderItemFactory,
-        OrderItemHelper $orderItemHelper
+        OrderItemHelper $orderItemHelper,
+        InvoiceManager $invoiceManager
     ) {
         $this->doctrine = $doctrine;
         $this->entityManager = $entityManager;
         $this->orderTotalFactory = $orderTotalFactory;
         $this->orderItemFactory = $orderItemFactory;
         $this->orderItemHelper = $orderItemHelper;
+        $this->invoiceManager = $invoiceManager;
     }
 
     /**
@@ -478,6 +486,35 @@ class OrderManager
         }
 
         return $orderTotal->getCapturedTotal() - $orderTotal->getInvoicedTotal();
+    }
+
+    /**
+     * Adds the invoice if it's applicable.
+     *
+     * @param Order $order
+     * @param string $paymentId
+     *
+     * @return OrderInvoice|null
+     */
+    public function addInvoice(Order $order, string $paymentId): ?OrderInvoice
+    {
+        // Invoice creation is applicable, if the order was fully captured
+        return $this->invoiceManager->addInvoiceIfApplicable($order, $paymentId);
+    }
+
+    /**
+     * Adds the invoice if it's applicable.
+     *
+     * @param Order $order
+     * @param string $paymentId
+     * @return void
+     */
+    public function addInvoiceIfApplicable(Order $order, string $paymentId): void
+    {
+        // Invoice creation is applicable, if the order was fully captured
+        if ($this->getAvailableCaptureAmount($order) <= 0.01) {
+            $this->invoiceManager->addInvoiceIfApplicable($order, $paymentId);
+        }
     }
 
     private function getOrderItemsRepository(): OrderItemsRepository

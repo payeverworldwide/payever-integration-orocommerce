@@ -41,12 +41,21 @@ payever:
         choices:
           live: Live
           sandbox: Sandbox
-      api_version:
-        label: API Version
-        tooltip: API Version.
+      checkout_language:
+        label: Checkout language
+        tooltip: Checkout interface language
         choices:
-          2: v2
-          3: v3
+          none: None
+          store: Use store locale
+          en: English
+          de: Deutsch
+          es: Español
+          no: Norsk
+          da: Dansk
+          sv: Svenska
+      overwrite_payment_labels:
+        label: Overwrite payment labels
+        tooltip: Update the description for existing payment methods during synchronization.
       log_level:
         label: Logging level
         tooltip: Logging level.
@@ -114,14 +123,14 @@ payever:
           stripe_directdebit: Stripe Direct Debit
           swedbank_creditcard: Swedbank Cards
           swedbank_invoice: Swedbank Invoice
-          zinia_bnpl: Zinia BNPL Netherlands
-          zinia_bnpl_de: Zinia BNPL Germany
-          zinia_installmen: Zinia Installments Netherlands
-          zinia_installment_de: Zinia Installments Germany
-          zinia_pos: POS Zinia BNPL Netherlands
-          zinia_pos_de: POS Zinia BNPL Germany
-          zinia_slice_three: Zinia Slice In Three Netherlands
-          zinia_slice_three_de: Zinia Slice In Three Germany
+          zinia_bnpl: Openbank Pay BNPL Netherlands
+          zinia_bnpl_de: Openbank Pay BNPL Germany
+          zinia_installment: Openbank Pay Installments Netherlands
+          zinia_installment_de: Openbank Pay Installments Germany
+          zinia_pos: POS Openbank Pay BNPL Netherlands
+          zinia_pos_de: POS Openbank Pay BNPL Germany
+          zinia_slice_three: Openbank Pay Slice In Three Netherlands
+          zinia_slice_three_de: Openbank Pay Slice In Three Germany
       b2b_company_search:
         label: Enable Company Search
         tooltip: Enable Company Search widget on the checkout page
@@ -159,6 +168,8 @@ payever:
       label: Redirect mode
     is_submit_method:
       label: Submit mode
+    is_b2b_method:
+      label: B2B Method
     instruction_text:
       label: Instruction text
     thumbnail:
@@ -282,7 +293,7 @@ payever:
       cancel_hint: You can cancel payment here.
       capture_hint: You can capture payment here.
       claim_hint: You can claim payment here.
-      claim_upload_hint: You can claim upload payment here.
+      claim_upload_hint: You can upload an invoice for claim payment here.
     table:
       identifier: Identifier
       refundedQuantity: Refunded Quantity
@@ -346,3 +357,12 @@ payever:
     invoice_pdf: Create invoice
   frontend:
     checkout: payever checkout
+
+oro:
+  payment:
+    paymenttransaction:
+      types:
+        settle:
+          label: Settle
+        capture_b2b:
+          label: Shipping

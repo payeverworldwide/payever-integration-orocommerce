@@ -13,6 +13,7 @@ class PayeverConfig extends AbstractParameterBagPaymentConfig implements Payever
     public const DESCRIPTION_OFFER = 'description_offer';
     public const DESCRIPTION_FEE = 'description_fee';
     public const IS_REDIRECT_METHOD = 'is_redirect_method';
+    public const IS_SUBMIT_METHOD_EDITABLE = 'is_submit_method_editable';
     public const IS_SUBMIT_METHOD = 'is_submit_method';
     public const IS_B2B_METHOD = 'is_b2b_method';
     public const INSTRUCTION_TEXT = 'instruction_text';
@@ -26,6 +27,8 @@ class PayeverConfig extends AbstractParameterBagPaymentConfig implements Payever
     public const IS_ACCEPT_FEE = 'is_accept_fee';
     public const FIXED_FEE = 'fixed_fee';
     public const VARIABLE_FEE = 'variable_fee';
+    public const BUSINESS_TYPE = 'business_type';
+    public const PAYMENT_ISSUER = 'paymentIssuer';
 
     public function getPaymentMethod(): string
     {
@@ -139,5 +142,15 @@ class PayeverConfig extends AbstractParameterBagPaymentConfig implements Payever
     public function getVariableFee(): float
     {
         return (float) $this->get(self::VARIABLE_FEE);
+    }
+
+    public function getPaymentIssuer(): string
+    {
+        return (string) $this->get(self::PAYMENT_ISSUER);
+    }
+
+    public function getBusinessType(): string
+    {
+        return (string) $this->get(self::BUSINESS_TYPE);
     }
 }

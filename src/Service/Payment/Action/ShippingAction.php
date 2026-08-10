@@ -53,6 +53,12 @@ class ShippingAction extends ActionAbstract implements ActionInterface
 
         $shippingGoodsRequestEntity->setShippingDetails($shippingDetailsEntity);
 
+        // Create invoice if applicable
+        $invoice = $this->orderManager->addInvoice($order, $paymentId);
+        if ($invoice) {
+            $shippingGoodsRequestEntity->setReference($invoice->getInvoiceNumber());
+        }
+
         try {
             /** @var Response $result */
             $result = $this->getPaymentApiClient()->shippingGoodsPaymentRequest(
@@ -155,6 +161,12 @@ class ShippingAction extends ActionAbstract implements ActionInterface
             ->setPaymentItems($paymentItems)
             ->setDeliveryFee($deliveryFee)
             ->setShippingDetails($shippingDetailsEntity);
+
+        // Create invoice if applicable
+        $invoice = $this->orderManager->addInvoice($order, $paymentId);
+        if ($invoice) {
+            $shippingGoodsRequestEntity->setReference($invoice->getInvoiceNumber());
+        }
 
         $result = $this->getPaymentApiClient()->shippingGoodsPaymentRequest(
             $paymentId,

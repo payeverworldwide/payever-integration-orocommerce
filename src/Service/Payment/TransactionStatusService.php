@@ -16,7 +16,6 @@ use Payever\Bundle\PaymentBundle\Service\Management\OrderManager;
 use Payever\Sdk\Payments\Enum\Status;
 use Payever\Sdk\Payments\Http\MessageEntity\RetrievePaymentResultEntity;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 class TransactionStatusService
 {
@@ -41,11 +40,6 @@ class TransactionStatusService
     private OrderManager $orderManager;
 
     /**
-     * @var RequestStack
-     */
-    private RequestStack $requestStack;
-
-    /**
      * @var LoggerInterface
      */
     private LoggerInterface $logger;
@@ -57,7 +51,6 @@ class TransactionStatusService
      * @param PaymentTransactionProvider $paymentTransactionProvider
      * @param TransactionHelper $transactionHelper
      * @param OrderManager $orderManager
-     * @param RequestStack $requestStack
      * @param LoggerInterface $logger
      */
     public function __construct(
@@ -65,14 +58,12 @@ class TransactionStatusService
         PaymentTransactionProvider $paymentTransactionProvider,
         TransactionHelper $transactionHelper,
         OrderManager $orderManager,
-        RequestStack $requestStack,
         LoggerInterface $logger
     ) {
         $this->entityManager = $entityManager;
         $this->paymentTransactionProvider = $paymentTransactionProvider;
         $this->transactionHelper = $transactionHelper;
         $this->orderManager = $orderManager;
-        $this->requestStack = $requestStack;
         $this->logger = $logger;
     }
 
@@ -80,19 +71,17 @@ class TransactionStatusService
      * Persist Transaction Status.
      *
      * @param RetrievePaymentResultEntity $payeverPayment
+     * @param Order $order
+     *
      * @return void
+     *
      * @throws \Doctrine\ORM\Exception\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Throwable
      */
-    public function persistTransactionStatus(RetrievePaymentResultEntity $payeverPayment): void
+    public function persistTransactionStatus(RetrievePaymentResultEntity $payeverPayment, Order $order): void
     {
         $paymentId = $payeverPayment->getId();
-        $orderReference = (string) $payeverPayment->getReference();
-        $order = $this->transactionHelper->getOrderByIdentifier($orderReference);
-        if (!$order) {
-            throw new \UnexpectedValueException('Order is not found');
-        }
 
         /** @var PaymentTransaction $paymentTransaction */
         $paymentTransaction = $this->getInitialTransaction($order);
@@ -157,7 +146,7 @@ class TransactionStatusService
     ): bool {
         $paymentTransaction = $this->getPaymentTransactionByOrderReference($reference);
         if (!$paymentTransaction) {
-            throw new \UnexpectedValueException('Payment transaction is missing for Order #' . $reference);
+            return false;
         }
 
         $transactionOptions = $paymentTransaction->getTransactionOptions();

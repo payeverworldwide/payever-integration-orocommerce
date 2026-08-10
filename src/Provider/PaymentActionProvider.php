@@ -347,7 +347,14 @@ class PaymentActionProvider
 
         try {
             $result = $this->settleAction->execute($order);
-            $paymentTransaction = $this->transactionBuilder->registerSettleTransaction(
+            $this->transactionBuilder->registerSettleTransaction(
+                $order,
+                $paymentId,
+                (float) $order->getTotal(),
+                $result->getResult()->toArray()
+            );
+
+            $paymentTransaction = $this->transactionBuilder->registerCaptureTransaction(
                 $order,
                 $paymentId,
                 (float) $order->getTotal(),
@@ -387,14 +394,15 @@ class PaymentActionProvider
      */
     public function processClaimUploadForm(Form $form): array
     {
-        /** @var Order $order */
-        $order = $form->getData()->data;
-        $orderId = $order->getIdentifier();
+        /** @var PaymentTransaction $paymentTransaction */
+        $paymentTransaction = $form->getData()->data;
+        $orderId = $paymentTransaction->getEntityIdentifier();
 
         $entity = $form->getData()->peClaimUpload;
 
         $this->logger->info('processClaimUploadForm', [$orderId]);
 
+        $order = $this->orderHelper->getOrderByID($orderId);
         $paymentId = $this->orderHelper->getPaymentId($order);
         $this->lock->acquireLock($paymentId, NotificationRequestProcessor::NOTIFICATION_LOCK_SECONDS);
 
@@ -408,7 +416,7 @@ class PaymentActionProvider
 
             $this->logger->info('Transaction has been registered', [$paymentTransaction->getId()]);
         } catch (\Exception $exception) {
-            $this->logger->critical('processClaimForm Exception: ' . $exception->getMessage());
+            $this->logger->critical('processClaimUploadForm Exception: ' . $exception->getMessage());
             $this->lock->releaseLock($paymentId);
 
             return [
@@ -440,11 +448,12 @@ class PaymentActionProvider
     public function processClaimForm(Form $form): array
     {
         /** @var Order $order */
-        $order = $form->getData()->data;
-        $orderId = $order->getIdentifier();
+        $paymentTransaction = $form->getData()->data;
+        $orderId = $paymentTransaction->getEntityIdentifier();
 
         $this->logger->info('processClaimForm', [$orderId]);
 
+        $order = $this->orderHelper->getOrderByID($orderId);
         $paymentId = $this->orderHelper->getPaymentId($order);
         $this->lock->acquireLock($paymentId, NotificationRequestProcessor::NOTIFICATION_LOCK_SECONDS);
 

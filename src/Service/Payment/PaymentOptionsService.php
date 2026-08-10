@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\Persistence\ManagerRegistry;
 use Oro\Bundle\ConfigBundle\Config\ConfigManager;
 use Oro\Bundle\CheckoutBundle\Entity\CheckoutWorkflowState;
+use Oro\Bundle\CurrencyBundle\DependencyInjection\Configuration as CurrencyConfig;
 use Oro\Bundle\EntityBundle\ORM\DoctrineHelper;
 use Oro\Bundle\IntegrationBundle\Entity\Channel;
 use Oro\Bundle\IntegrationBundle\Entity\Channel as Integration;
@@ -92,6 +93,13 @@ class PaymentOptionsService
      */
     public function synchronizePaymentOptions()
     {
+        $businessUuid = $this->configManager->get('payever_payment.business_uuid');
+        if (empty($businessUuid)) {
+            throw new \UnexpectedValueException(
+                'Please enter Business UUID.'
+            );
+        }
+
         // Remove exists channels / transports
         $integrations = $this->getChannelRepository()->findBy(['type' => PayeverChannelType::TYPE]);
         foreach ($integrations as $integration) {
@@ -100,17 +108,17 @@ class PaymentOptionsService
 
         $this->logger->info('Channels / transports removed');
 
-        $businessUuid = $this->configManager->get('payever_payment.business_uuid');
-        if (empty($businessUuid)) {
-            throw new \UnexpectedValueException(
-                'Please enter Business UUID.'
-            );
-        }
+        $overwritePaymentLabels = $this->configManager->get('payever_payment.overwrite_payment_labels');
+        $currency = $this->configManager->get(CurrencyConfig::getConfigKeyByName(
+            CurrencyConfig::KEY_DEFAULT_CURRENCY
+        ));
 
         $paymentMethods = $this->getPaymentOptions($businessUuid);
         $b2bCountries = [];
         $ruleNames = [];
         foreach ($paymentMethods as $paymentMethod) {
+            $oldIntegration = $this->findIntegrationByVariantId($integrations, $paymentMethod->getVariantId());
+
             $currencies = (array) $paymentMethod->getOptions()->getCurrencies();
             $countries = (array) $paymentMethod->getOptions()->getCountries();
 
@@ -119,6 +127,10 @@ class PaymentOptionsService
                 $this->addB2BCountries($paymentMethod, $b2bCountries);
             }
 
+            $limits = $paymentMethod->getOptions()?->getAmountLimits()?->toArray() ?: [];
+            $min = $limits['min'][$currency] ?? $paymentMethod->getMin();
+            $max = $limits['max'][$currency] ?? $paymentMethod->getMax();
+
             $transport = new Transport();
             $transport
                 ->setPaymentMethod($paymentMethod->getPaymentMethod())
@@ -126,19 +138,29 @@ class PaymentOptionsService
                 ->setDescriptionOffer(strip_tags((string) $paymentMethod->getDescriptionOffer()))
                 ->setDescriptionFee(strip_tags((string) $paymentMethod->getDescriptionFee()))
                 ->setIsRedirectMethod((bool)$paymentMethod->isRedirectMethod())
-                ->setIsSubmitMethod((bool)$paymentMethod->getIsSubmitMethod())
+                ->setIsSubmitMethodEditable((bool)$paymentMethod->getIsSubmitMethod())
+                // Make it disabled by default
+                ->setIsSubmitMethod(false)
                 ->setIsB2BMethod($isB2BMethod)
+                ->setPaymentIssuer($paymentMethod->getPaymentIssuer())
+                ->setBusinessType($paymentMethod->getBusinessType())
                 ->setInstructionText(strip_tags((string) $paymentMethod->getInstructionText()))
                 ->setThumbnail($paymentMethod->getThumbnail1())
                 ->setCurrencies($currencies)
                 ->setCountries($countries)
                 ->setIsShippingAddressAllowed($paymentMethod->getShippingAddressAllowed())
                 ->setIsShippingAddressEquality($paymentMethod->getShippingAddressEquality())
-                ->setMax($paymentMethod->getMax())
-                ->setMin($paymentMethod->getMin())
+                ->setMax($max)
+                ->setMin($min)
                 ->setIsAcceptFee((bool) $paymentMethod->getAcceptFee())
                 ->setVariableFee((float) $paymentMethod->getVariableFee())
                 ->setFixedFee((float) $paymentMethod->getFixedFee());
+
+            if (!$overwritePaymentLabels && $oldIntegration) {
+                $transport
+                    ->setDescriptionOffer(strip_tags((string) $oldIntegration->getTransport()->getDescriptionOffer()))
+                    ->setDescriptionFee(strip_tags((string) $oldIntegration->getTransport()->getDescriptionFee()));
+            }
 
             $integration = new Integration();
             $integration
@@ -150,6 +172,10 @@ class PaymentOptionsService
                 ->setEnabled(true)
                 ->setDefaultUserOwner($this->getDefaultUserOwner());
 
+            if (!$overwritePaymentLabels && $oldIntegration) {
+                $integration->setName($oldIntegration->getName());
+            }
+
             $this->entityManager->persist($integration);
             $this->entityManager->flush($integration);
 
@@ -158,6 +184,11 @@ class PaymentOptionsService
             if ($variantName) {
                 $paymentName = sprintf("%s-%s", $paymentName, $variantName);
             }
+
+            if (!$overwritePaymentLabels && $oldIntegration && $oldIntegration->getTransport()->getLabels()->count()) {
+                $paymentName = $oldIntegration->getTransport()->getLabels()->first()->getString();
+            }
+
             // @codeCoverageIgnoreStart
             // Name localization
             $this->addLocalization(
@@ -319,6 +350,23 @@ class PaymentOptionsService
         return $this->managerRegistry
             ->getManagerForClass(User::class)
             ->getRepository(User::class);
+    }
+
+    /**
+     * @param Channel[] $integrations
+     * @param string $variantId
+     *
+     * @return Channel|null
+     */
+    private function findIntegrationByVariantId(array $integrations, string $variantId): ?Channel
+    {
+        foreach ($integrations as $item) {
+            if ($item->getTransport()->getVariantId() === $variantId) {
+                return $item;
+            }
+        }
+
+        return null;
     }
 
     /**

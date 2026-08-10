@@ -14,6 +14,10 @@ use Payever\Bundle\PaymentBundle\Entity\Repository\PayeverSettingsRepository;
 use Payever\Bundle\PaymentBundle\Method\Config\PayeverConfig;
 use Symfony\Component\HttpFoundation\ParameterBag;
 
+/**
+ * @SuppressWarnings(PHPMD.TooManyFields)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ */
 #[ORM\Entity(repositoryClass: PayeverSettingsRepository::class)]
 class PayeverSettings extends Transport
 {
@@ -31,6 +35,9 @@ class PayeverSettings extends Transport
 
     #[ORM\Column(name: 'payever_is_redirect_method', type: Types::BOOLEAN, options: ['default' => false])]
     protected $isRedirectMethod = false;
+
+    #[ORM\Column(name: 'payever_is_submit_method_editable', type: Types::BOOLEAN, options: ['default' => false])]
+    protected $isSubmitMethodEditable = false;
 
     #[ORM\Column(name: 'payever_is_submit_method', type: Types::BOOLEAN, options: ['default' => false])]
     protected $isSubmitMethod = false;
@@ -70,6 +77,12 @@ class PayeverSettings extends Transport
 
     #[ORM\Column(name: 'payever_variable_fee', type: Types::FLOAT, nullable: true)]
     protected $variableFee;
+
+    #[ORM\Column(name: 'payever_business_type', type: Types::STRING, nullable: true)]
+    protected $businessType;
+
+    #[ORM\Column(name: 'payever_payment_issuer', type: Types::STRING, nullable: true)]
+    protected $paymentIssuer;
 
     #[ORM\ManyToMany(targetEntity: LocalizedFallbackValue::class, cascade: ['ALL'], orphanRemoval: true)]
     #[ORM\JoinTable(name: 'payever_trans_label')]
@@ -259,6 +272,18 @@ class PayeverSettings extends Transport
         return $this;
     }
 
+    public function getIsSubmitMethodEditable(): bool
+    {
+        return $this->isSubmitMethodEditable;
+    }
+
+    public function setIsSubmitMethodEditable(bool $isSubmitMethodEditable): self
+    {
+        $this->isSubmitMethodEditable = $isSubmitMethodEditable;
+
+        return $this;
+    }
+
     public function getIsSubmitMethod(): bool
     {
         return $this->isSubmitMethod;
@@ -425,6 +450,30 @@ class PayeverSettings extends Transport
         return $this;
     }
 
+    public function setPaymentIssuer(?string $paymentIssuer): self
+    {
+        $this->paymentIssuer = $paymentIssuer;
+
+        return $this;
+    }
+
+    public function getPaymentIssuer(): ?string
+    {
+        return $this->paymentIssuer;
+    }
+
+    public function setBusinessType(?string $businessType): self
+    {
+        $this->businessType = $businessType;
+
+        return $this;
+    }
+
+    public function getBusinessType(): ?string
+    {
+        return $this->businessType;
+    }
+
     /**
      * @return ParameterBag
      */
@@ -440,6 +489,7 @@ class PayeverSettings extends Transport
                     PayeverConfig::DESCRIPTION_OFFER => $this->getDescriptionOffer(),
                     PayeverConfig::DESCRIPTION_FEE => $this->getDescriptionFee(),
                     PayeverConfig::IS_REDIRECT_METHOD => $this->getIsRedirectMethod(),
+                    PayeverConfig::IS_SUBMIT_METHOD_EDITABLE => $this->getIsSubmitMethodEditable(),
                     PayeverConfig::IS_SUBMIT_METHOD => $this->getIsSubmitMethod(),
                     PayeverConfig::IS_B2B_METHOD => $this->getIsB2BMethod(),
                     PayeverConfig::INSTRUCTION_TEXT => $this->getInstructionText(),
@@ -453,6 +503,8 @@ class PayeverSettings extends Transport
                     PayeverConfig::IS_ACCEPT_FEE => $this->getIsAcceptFee(),
                     PayeverConfig::FIXED_FEE => $this->getFixedFee(),
                     PayeverConfig::VARIABLE_FEE => $this->getVariableFee(),
+                    PayeverConfig::PAYMENT_ISSUER => $this->getPaymentIssuer(),
+                    PayeverConfig::BUSINESS_TYPE => $this->getBusinessType()
                 ]
             );
         }

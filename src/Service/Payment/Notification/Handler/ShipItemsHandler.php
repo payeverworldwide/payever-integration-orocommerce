@@ -103,6 +103,9 @@ class ShipItemsHandler extends NotificationHandlerAbstract implements HandlerInt
             )
         );
 
+        // Create invoice if applicable
+        $this->orderManager->addInvoiceIfApplicable($order, $paymentId);
+
         return [
             'successful' => true,
         ];

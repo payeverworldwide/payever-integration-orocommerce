@@ -11,3 +11,14 @@ services:
       - '@request_stack'
     tags:
       - { name: layout.data_provider, alias: 'payever_finance_express_data_layer' }
+
+  payever.layout.data_provider.payment_terms:
+    class: 'Payever\Bundle\PaymentBundle\Layout\DataProvider\PaymentTermsProvider'
+    arguments:
+      - '@oro_config.manager'
+      - '@payever.service.api.service_provider'
+      - '@oro_payment.method.provider.applicable_methods_provider'
+      - '@oro_checkout.provider.payment_context'
+      - '@oro_locale.helper.localization'
+    tags:
+      - { name: layout.data_provider, alias: 'payever_payment_terms_data_layer' }

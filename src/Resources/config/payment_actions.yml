@@ -8,6 +8,8 @@ services:
     class: Payever\Bundle\PaymentBundle\Method\PaymentAction\PurchasePaymentAction
     arguments:
       - '@payever.service.payment.payment_processor'
+      - '@payever.service.management.checkout'
+      - '@payever.service.helper.transaction'
       - '@payever.service.logger'
     tags:
       - { name: payever_payment.payment_actions }

@@ -86,21 +86,33 @@ system_configuration:
           payever.system_configuration.fields.log_level.choices.info: info
           payever.system_configuration.fields.log_level.choices.error: error
           payever.system_configuration.fields.log_level.choices.debug: debug
-    payever_payment.api_version:
+    payever_payment.checkout_language:
       data_type: choice
       type: Symfony\Component\Form\Extension\Core\Type\ChoiceType
       search_type: choice
       options:
-        label: payever.system_configuration.fields.api_version.label
-        tooltip: payever.system_configuration.fields.api_version.tooltip
+        label: payever.system_configuration.fields.checkout_language.label
+        tooltip: payever.system_configuration.fields.checkout_language.tooltip
         required: true
         constraints:
           - NotBlank: ~
         choices:
-          payever.system_configuration.fields.api_version.choices.3: 3
-          payever.system_configuration.fields.api_version.choices.2: 2
+          payever.system_configuration.fields.checkout_language.choices.none: none
+          payever.system_configuration.fields.checkout_language.choices.store: store
+          payever.system_configuration.fields.checkout_language.choices.en: en
+          payever.system_configuration.fields.checkout_language.choices.de: de
+          payever.system_configuration.fields.checkout_language.choices.es: es
+          payever.system_configuration.fields.checkout_language.choices.no: no
+          payever.system_configuration.fields.checkout_language.choices.da: da
+          payever.system_configuration.fields.checkout_language.choices.sv: sv
         attr:
           class: pe-mode
+    payever_payment.overwrite_payment_labels:
+      data_type: boolean
+      type: Oro\Bundle\ConfigBundle\Form\Type\ConfigCheckbox
+      options:
+        label: payever.system_configuration.fields.overwrite_payment_labels.label
+        tooltip: payever.system_configuration.fields.overwrite_payment_labels.tooltip
     payever_payment.oauth_token:
       data_type: string
       type: Symfony\Component\Form\Extension\Core\Type\HiddenType
@@ -108,6 +120,9 @@ system_configuration:
       data_type: string
       type: Symfony\Component\Form\Extension\Core\Type\HiddenType
     payever_payment.live_url:
+      data_type: string
+      type: Symfony\Component\Form\Extension\Core\Type\HiddenType
+    payever_payment.widget_url:
       data_type: string
       type: Symfony\Component\Form\Extension\Core\Type\HiddenType
     payever_payment.synchronize_button:
@@ -141,6 +156,11 @@ system_configuration:
     payever_payment.apm_secret_live:
       data_type: string
       type: Symfony\Component\Form\Extension\Core\Type\HiddenType
+    payever_payment.command_timestamp:
+      data_type: string
+      type: Symfony\Component\Form\Extension\Core\Type\HiddenType
+      options:
+        resettable: false
     payever_payment.fe_configuration:
       ui_only:
       type: Payever\Bundle\PaymentBundle\Form\Type\FinanceExpressConfigurationType
@@ -210,9 +230,6 @@ system_configuration:
       data_type: array
       type: Oro\Bundle\LocaleBundle\Form\Type\CountryType
       options:
-        label: payever.system_configuration.fields.b2b_countries.label
-        tooltip: payever.system_configuration.fields.b2b_countries.tooltip
-        multiple: true
         resettable: false
     payever_payment.b2b_company_search_type:
       data_type: choice
@@ -246,24 +263,24 @@ system_configuration:
                       - payever_payment.business_uuid
                       - payever_payment.is_redirect
                       - payever_payment.mode
-                      - payever_payment.log_level
-                      - payever_payment.api_version
+                      - payever_payment.checkout_language
                   payever_payment_methods_synchronization:
                     priority: 20
                     children:
+                      - payever_payment.overwrite_payment_labels
                       - payever_payment.synchronize_button
                   payever_utilities:
                     priority: 10
                     children:
+                      - payever_payment.log_level
+                      - payever_payment.enable_apm
                       - payever_payment.download_logs
                       - payever_payment.clean_logs
-                      - payever_payment.enable_apm
                   payver_b2b_settings:
                     priority: 9
                     children:
                       - payever_payment.b2b_company_search
                       - payever_payment.b2b_company_credit_line
-                      - payever_payment.b2b_countries
                       - payever_payment.b2b_company_search_type
                   finance_express:
                     priority: -10

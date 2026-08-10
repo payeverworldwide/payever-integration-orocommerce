@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Payever\Bundle\PaymentBundle\Service\Payment\Request;
 
+use Oro\Bundle\CheckoutBundle\Entity\Checkout;
 use Oro\Bundle\ConfigBundle\Config\ConfigManager;
 use Oro\Bundle\CustomerBundle\Entity\CustomerUser;
 use Oro\Bundle\CustomerBundle\Provider\CustomerUserLoggingInfoProvider;
-use Oro\Bundle\EntityBundle\ORM\DoctrineHelper;
+use Oro\Bundle\LocaleBundle\Helper\LocalizationHelper;
 use Oro\Bundle\OrderBundle\Entity\Order;
 use Oro\Bundle\OrderBundle\Entity\OrderAddress;
-use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
-use Oro\Bundle\PaymentBundle\Provider\PaymentTransactionProvider;
+use Oro\Bundle\PricingBundle\SubtotalProcessor\TotalProcessorProvider;
+use Payever\Bundle\PaymentBundle\Constant\LanguageConstant;
 use Payever\Bundle\PaymentBundle\Constant\QueryConstant;
 use Payever\Bundle\PaymentBundle\Constant\SalutationConstant;
 use Payever\Bundle\PaymentBundle\Method\Config\PayeverConfigInterface;
@@ -19,7 +20,6 @@ use Payever\Bundle\PaymentBundle\Service\Api\ServiceProvider;
 use Payever\Bundle\PaymentBundle\Service\Helper\DataHelper;
 use Payever\Bundle\PaymentBundle\Service\Helper\OrderItemHelper;
 use Payever\Bundle\PaymentBundle\Service\Helper\UrlHelper;
-use Payever\Bundle\PaymentBundle\Service\Payment\TransactionStatusService;
 use Payever\Sdk\Core\Enum\ChannelSet;
 use Payever\Sdk\Core\Enum\ChannelTypeSet;
 use Payever\Sdk\Core\Http\RequestEntity;
@@ -35,8 +35,6 @@ use Payever\Sdk\Payments\Http\MessageEntity\SubmitPaymentResultEntity;
 use Payever\Sdk\Payments\Http\MessageEntity\UrlsEntity;
 use Payever\Sdk\Payments\Http\RequestEntity\CreatePaymentV3Request;
 use Payever\Sdk\Payments\Http\RequestEntity\SubmitPaymentRequestV3;
-use Payever\Sdk\Payments\Http\ResponseEntity\RetrievePaymentResponse;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -44,6 +42,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 class PopulatePaymentRequestV3
 {
+    public const CHECKOUT_REFERENCE_PREFIX = 'checkout_';
     private const MAJORITY_YEARS = 18;
     private const CUSTOMER_TYPE_PERSON = 'person';
     private const CUSTOMER_TYPE_ORGANIZATION = 'organization';
@@ -58,46 +57,51 @@ class PopulatePaymentRequestV3
 
     private OrderItemHelper $orderItemHelper;
 
-    /**
-     * @var DoctrineHelper
-     */
-    private DoctrineHelper $doctrineHelper;
-
-    private TransactionStatusService $transactionStatusService;
-
-    private PaymentTransactionProvider $paymentTransactionProvider;
-
     private CustomerUserLoggingInfoProvider $customerUserLoggingInfoProvider;
 
-    private RequestStack $requestStack;
+    private LocalizationHelper $localizationHelper;
+
+    private TotalProcessorProvider $totalsProvider;
 
     /**
      * @var PayeverConfigInterface
      */
     private PayeverConfigInterface $config;
 
+    /**
+     * @var Checkout
+     */
+    private Checkout $checkout;
+
+    /**
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+     * @param ServiceProvider $serviceProvider
+     * @param ConfigManager $configManager
+     * @param DataHelper $dataHelper
+     * @param UrlHelper $urlHelper
+     * @param OrderItemHelper $orderItemHelper
+     * @param CustomerUserLoggingInfoProvider $customerUserLoggingInfoProvider
+     * @param TotalProcessorProvider $totalsProvider
+     * @param LocalizationHelper $localizationHelper
+     */
     public function __construct(
         ServiceProvider $serviceProvider,
         ConfigManager $configManager,
         DataHelper $dataHelper,
         UrlHelper $urlHelper,
         OrderItemHelper $orderItemHelper,
-        DoctrineHelper $doctrineHelper,
-        TransactionStatusService $transactionStatusService,
-        PaymentTransactionProvider $paymentTransactionProvider,
         CustomerUserLoggingInfoProvider $customerUserLoggingInfoProvider,
-        RequestStack $requestStack
+        TotalProcessorProvider $totalsProvider,
+        LocalizationHelper $localizationHelper,
     ) {
         $this->serviceProvider = $serviceProvider;
         $this->configManager = $configManager;
         $this->dataHelper = $dataHelper;
         $this->urlHelper = $urlHelper;
         $this->orderItemHelper = $orderItemHelper;
-        $this->doctrineHelper = $doctrineHelper;
-        $this->transactionStatusService = $transactionStatusService;
-        $this->paymentTransactionProvider = $paymentTransactionProvider;
         $this->customerUserLoggingInfoProvider = $customerUserLoggingInfoProvider;
-        $this->requestStack = $requestStack;
+        $this->totalsProvider = $totalsProvider;
+        $this->localizationHelper = $localizationHelper;
     }
 
     /**
@@ -115,14 +119,29 @@ class PopulatePaymentRequestV3
     }
 
     /**
-     * @param PaymentTransaction $paymentTransaction
+     * Set Payment Checkout.
+     *
+     * @param Checkout $checkout
+     *
+     * @return $this
+     */
+    public function setCheckout(Checkout $checkout): self
+    {
+        $this->checkout = $checkout;
+
+        return $this;
+    }
+
+    /**
+     * @param Order $order
      *
      * @return string
      * @throws \Exception
      */
-    public function getRedirectUrl(PaymentTransaction $paymentTransaction): string
+    public function createRedirectUrl(Order $order): string
     {
-        $paymentRequestEntity = $this->getCreatePaymentRequestEntity($paymentTransaction);
+        $paymentRequestEntity = $this->getCreatePaymentRequestEntity($order);
+
         $response = $this->serviceProvider
             ->getPaymentsApiClient()
             ->createPaymentV3Request($paymentRequestEntity);
@@ -132,6 +151,7 @@ class PopulatePaymentRequestV3
 
         if (!$redirectUrl) {
             $reason = $responseEntity->getErrorDescription() ?? 'redirect_url is empty';
+
             throw new \UnexpectedValueException(sprintf('Create payment API error: %s', $reason));
         }
 
@@ -141,90 +161,65 @@ class PopulatePaymentRequestV3
     /**
      * Get Submit Redirect Url.
      *
-     * @param PaymentTransaction $paymentTransaction
+     * @param Order $order
+     *
      * @return string
+     *
      * @throws \Throwable
      */
-    public function getSubmitRedirectUrl(PaymentTransaction $paymentTransaction): string
+    public function createSubmitUrl(Order $order): string
     {
-        $paymentRequestEntity = $this->getSubmitPaymentRequestEntity($paymentTransaction);
+        $paymentRequestEntity = $this->getSubmitPaymentRequestEntity($order);
 
         $response = $this->serviceProvider
             ->getPaymentsApiClient()
             ->submitPaymentRequestV3($paymentRequestEntity);
 
-        /** @var RetrievePaymentResponse $responseEntity */
-        $responseEntity = $response->getResponseEntity();
-
         /** @var SubmitPaymentResultEntity $result */
-        $result = $responseEntity->getResult();
-        $paymentId = $result->getId();
+        $result = $response->getResponseEntity()->getResult();
 
-        $paymentTransaction
-            ->setReference($paymentId)
-            ->setResponse($result->toArray());
-
-        switch ($result->getStatus()) {
-            case Status::STATUS_CANCELLED:
-                $paymentTransaction->setSuccessful(false)
-                    ->setActive(false);
-                $this->paymentTransactionProvider->savePaymentTransaction($paymentTransaction);
-                $this->transactionStatusService->persistTransactionStatus($result);
-
-                return str_replace(
-                    QueryConstant::PAYMENT_ID_PLACEHODLER,
-                    $paymentId,
-                    $this->urlHelper->getCancelUrl($paymentTransaction)
-                );
-            case Status::STATUS_DECLINED:
-            case Status::STATUS_FAILED:
-                $paymentTransaction->setSuccessful(false)
-                    ->setActive(false);
-                $this->paymentTransactionProvider->savePaymentTransaction($paymentTransaction);
-                $this->transactionStatusService->persistTransactionStatus($result);
-
-                return str_replace(
-                    QueryConstant::PAYMENT_ID_PLACEHODLER,
-                    $paymentId,
-                    $this->urlHelper->getFailureUrl($paymentTransaction)
-                );
-            default:
-                $paymentTransaction
-                    ->setSuccessful(true)
-                    ->setActive(true);
-                $this->paymentTransactionProvider->savePaymentTransaction($paymentTransaction);
-                $this->transactionStatusService->persistTransactionStatus($result);
-
-                return str_replace(
-                    QueryConstant::PAYMENT_ID_PLACEHODLER,
-                    $paymentId,
-                    $this->urlHelper->getSuccessUrl($paymentTransaction)
-                );
-        }
+        return match ($result->getStatus()) {
+            Status::STATUS_CANCELLED => $this->urlHelper->getCancelUrl(
+                $this->checkout->getId(),
+                [QueryConstant::PARAMETER_PAYMENT_ID => $result->getId()]
+            ),
+            Status::STATUS_DECLINED, Status::STATUS_FAILED => $this->urlHelper->getFailureUrl(
+                $this->checkout->getId(),
+                [QueryConstant::PARAMETER_PAYMENT_ID => $result->getId()]
+            ),
+            default => $this->urlHelper->getSuccessUrl(
+                $this->checkout->getId(),
+                [QueryConstant::PARAMETER_PAYMENT_ID => $result->getId()]
+            ),
+        };
     }
 
     /**
-     * @param PaymentTransaction $paymentTransaction
+     * @param Order $order
      *
      * @return RequestEntity
+     *
+     * @throws \Exception
      */
-    private function getCreatePaymentRequestEntity(PaymentTransaction $paymentTransaction): RequestEntity
+    private function getCreatePaymentRequestEntity(Order $order): RequestEntity
     {
         return $this->populatePaymentRequestEntity(
-            $paymentTransaction,
+            $order,
             new CreatePaymentV3Request()
         );
     }
 
     /**
-     * @param PaymentTransaction $paymentTransaction
+     * @param Order $order
+     *
      * @return SubmitPaymentRequestV3
+     *
      * @throws \Exception
      */
-    private function getSubmitPaymentRequestEntity(PaymentTransaction $paymentTransaction): SubmitPaymentRequestV3
+    private function getSubmitPaymentRequestEntity(Order $order): SubmitPaymentRequestV3
     {
         $requestEntity = $this->populatePaymentRequestEntity(
-            $paymentTransaction,
+            $order,
             new SubmitPaymentRequestV3()
         );
 
@@ -260,43 +255,26 @@ class PopulatePaymentRequestV3
     }
 
     /**
-     * Get Order entity.
-     *
-     * @param PaymentTransaction $paymentTransaction
-     *
-     * @return Order|null
-     */
-    private function getOrder(PaymentTransaction $paymentTransaction): ?Order
-    {
-        /** @var Order $entity */
-        return $this->doctrineHelper->getEntityReference(
-            $paymentTransaction->getEntityClass(),
-            $paymentTransaction->getEntityIdentifier()
-        );
-    }
-
-    /**
-     * @param PaymentTransaction $paymentTransaction
+     * @param Order $order
      * @param RequestEntity $requestEntity
      *
      * @return RequestEntity
      * @throws \Exception
      */
     private function populatePaymentRequestEntity(
-        PaymentTransaction $paymentTransaction,
+        Order $order,
         RequestEntity $requestEntity
     ): RequestEntity {
-        $order = $this->getOrder($paymentTransaction);
-        if (!$order) {
-            throw new \Exception('Order is not found.');
-        }
-
         $billingAddress = $order->getBillingAddress();
         $customerUser = $order->getCustomerUser();
 
+        $this->totalsProvider->enableRecalculation();
+        $total = $this->totalsProvider->getTotal($order);
+
         $purchaseEntity = new PurchaseEntity();
-        $purchaseEntity->setAmount(round((float) $paymentTransaction->getAmount(), 2))
-            ->setCurrency($paymentTransaction->getCurrency());
+        $purchaseEntity
+            ->setAmount(round($total->getAmount(), 2))
+            ->setCurrency($total->getCurrency());
 
         $shippingCost = $order->getShippingCost();
         if ($shippingCost) {
@@ -309,18 +287,20 @@ class PopulatePaymentRequestV3
             ->setSource($this->dataHelper->getCmsVersion())
             ->setType(ChannelTypeSet::ECOMMERCE);
 
+        $reference = $order->getId() ?: self::CHECKOUT_REFERENCE_PREFIX . $this->checkout->getId();
+
         $requestEntity
             ->setChannel($channelEntity)
-            ->setReference($paymentTransaction->getEntityIdentifier())
+            ->setReference($reference)
             ->setPaymentMethod($this->config->getPaymentMethod())
-            ->setPaymentVariantId($this->config->getVariantId())
+            ->setVariantId($this->config->getVariantId())
             ->setClientIp($this->customerUserLoggingInfoProvider->getUserLoggingInfo($customerUser)['ipaddress'])
             ->setPluginVersion($this->dataHelper->getPluginVersion())
             ->setPurchase($purchaseEntity)
             ->setCustomer($this->getCustomerEntity($customerUser, $billingAddress))
             ->setCart($this->orderItemHelper->buildCartItemsV3($order))
             ->setBillingAddress($this->populateAddressEntity($billingAddress))
-            ->setUrls($this->getUrlsEntity($paymentTransaction));
+            ->setUrls($this->getUrlsEntity());
 
         // Set Shipping address
         if ($this->config->getShippingAddressAllowed()) {
@@ -335,22 +315,25 @@ class PopulatePaymentRequestV3
             }
         }
 
+        $language = $this->getLanguage();
+        if ($language) {
+            $requestEntity->setLocale($language);
+        }
+
         // Set company
         $company = $billingAddress->getOrganization();
         if (!empty($company)) {
             $companyEntity = new CompanyEntity();
-            $companyEntity->setName($company)
+            $companyEntity
+                ->setName($company)
                 ->setExternalId($billingAddress->getPayeverExternalId());
 
             $requestEntity->setCompany($companyEntity);
         }
 
-
         // Add Company name to payment data
         $paymentData = new PaymentDataEntity();
-        $isRedirectMethod = $this->config->getIsRedirectMethod()
-            && $this->configManager->get('payever_payment.is_redirect');
-        $paymentData->setForceRedirect((bool)$isRedirectMethod);
+        $paymentData->setForceRedirect($this->config->getIsRedirectMethod());
 
         $requestEntity->setPaymentData($paymentData);
 
@@ -374,7 +357,8 @@ class PopulatePaymentRequestV3
         $shippingCost = $order->getShippingCost();
 
         $shippingOptionEntity = new ShippingOptionEntity();
-        $shippingOptionEntity->setName((string)$shippingName)
+        $shippingOptionEntity
+            ->setName((string)$shippingName)
             ->setCarrier((string)$shippingName)
             ->setPrice((float)$shippingCost->getValue())
             ->setTaxAmount(0)
@@ -403,7 +387,6 @@ class PopulatePaymentRequestV3
         return $shippingOptionEntity;
     }
 
-
     /**
      * Get Customer Entity.
      *
@@ -417,6 +400,7 @@ class PopulatePaymentRequestV3
     ): CustomerEntity {
         $customerEntity = new CustomerEntity();
         $customerEntity->setType(self::CUSTOMER_TYPE_PERSON);
+        $customerEntity->setPhone($billingAddress->getPhone());
 
         if ($customer) {
             $customerEntity->setEmail($customer->getEmail());
@@ -437,18 +421,41 @@ class PopulatePaymentRequestV3
     /**
      * Get Urls Entity.
      *
-     * @param PaymentTransaction $paymentTransaction
      * @return UrlsEntity
      */
-    private function getUrlsEntity(PaymentTransaction $paymentTransaction): UrlsEntity
+    private function getUrlsEntity(): UrlsEntity
     {
         $urls = new UrlsEntity();
-        $urls->setSuccess($this->urlHelper->getSuccessUrl($paymentTransaction))
-            ->setFailure($this->urlHelper->getFailureUrl($paymentTransaction))
-            ->setCancel($this->urlHelper->getCancelUrl($paymentTransaction))
-            ->setNotification($this->urlHelper->getNoticeUrl($paymentTransaction))
-            ->setPending($this->urlHelper->getPendingUrl($paymentTransaction));
+        $urls
+            ->setSuccess($this->urlHelper->getSuccessUrl($this->checkout->getId()))
+            ->setPending($this->urlHelper->getPendingUrl($this->checkout->getId()))
+            ->setFailure($this->urlHelper->getFailureUrl($this->checkout->getId()))
+            ->setCancel($this->urlHelper->getCancelUrl($this->checkout->getId()))
+            ->setNotification($this->urlHelper->getNoticeUrl());
 
         return $urls;
+    }
+
+    /**
+     * Get checkout language
+     *
+     * @return string
+     */
+    private function getLanguage(): string
+    {
+        $checkoutLng = $this->configManager->get('payever_payment.checkout_language') ?: LanguageConstant::STORE;
+
+        switch ($checkoutLng) {
+            case LanguageConstant::NONE:
+                return isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])
+                    ? substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2)
+                    : '';
+            case LanguageConstant::STORE:
+                $currentLocalization = $this->localizationHelper->getCurrentLocalization();
+
+                return substr($currentLocalization->getLanguageCode(), 0, 2);
+            default:
+                return $checkoutLng;
+        }
     }
 }

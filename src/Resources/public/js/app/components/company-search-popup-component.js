@@ -249,7 +249,7 @@ define(function(require) {
                     $form.validate();
                     if ($form.valid()) {
                         self.formSubmissionAllowed = true;
-                        self.options.form.submit();
+                        $form.trigger('submit');
                     }
                 }, 3000);
             });
@@ -261,7 +261,7 @@ define(function(require) {
                 $form.validate();
                 if ($form.valid()) {
                     self.formSubmissionAllowed = true;
-                    self.options.form.submit();
+                    $form.trigger('submit');
                 }
             });
         },

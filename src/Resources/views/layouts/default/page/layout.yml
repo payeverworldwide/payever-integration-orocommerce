@@ -12,6 +12,7 @@ layout:
           vars:
             container_id: financial_express_head_1
             is_sandbox: =data["payever_finance_express_data_layer"].isSandboxMode()
+            widget_url: =data["payever_finance_express_data_layer"].getWidgetUrl()
     - '@add':
         id: finance_express_body
         blockType: container

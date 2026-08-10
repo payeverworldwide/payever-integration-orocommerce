@@ -26,7 +26,7 @@ class PayeverPaymentBundleInstaller implements Installation
      */
     public function getMigrationVersion(): string
     {
-        return 'v1_2';
+        return 'v1_5';
     }
 
     /**
@@ -39,6 +39,7 @@ class PayeverPaymentBundleInstaller implements Installation
         $this->createPayeverShortLabelTable($schema);
         $this->createPayeverTransLabelTable($schema);
         $this->createPayeverPaymentActionsTable($schema);
+        $this->createOrderInvoiceTable($schema);
 
         /** Foreign keys generation */
         $this->addPayeverShortLabelForeignKeys($schema);
@@ -46,6 +47,7 @@ class PayeverPaymentBundleInstaller implements Installation
 
         $this->createPayeverOrderItemsTable($schema);
         $this->createPayeverOrderTotalsTable($schema);
+        $this->createPayeverCheckoutTable($schema);
 
         $this->addAddressExtensionId($schema, 'oro_order_address');
         $this->addAddressExtensionId($schema, 'oro_customer_address');
@@ -71,7 +73,6 @@ class PayeverPaymentBundleInstaller implements Installation
                 ]
             );
         }
-
 
         if (!$table->hasColumn('payever_variant_id')) {
             $table->addColumn(
@@ -108,6 +109,17 @@ class PayeverPaymentBundleInstaller implements Installation
         if (!$table->hasColumn('payever_is_redirect_method')) {
             $table->addColumn(
                 'payever_is_redirect_method',
+                'boolean',
+                [
+                    'default' => '0',
+                    'notnull' => false
+                ]
+            );
+        }
+
+        if (!$table->hasColumn('payever_is_submit_method_editable')) {
+            $table->addColumn(
+                'payever_is_submit_method_editable',
                 'boolean',
                 [
                     'default' => '0',
@@ -265,6 +277,28 @@ class PayeverPaymentBundleInstaller implements Installation
                 ]
             );
         }
+
+        if (!$table->hasColumn('payever_business_type')) {
+            $table->addColumn(
+                'payever_business_type',
+                'string',
+                [
+                    'notnull' => false,
+                    'length' => 255
+                ]
+            );
+        }
+
+        if (!$table->hasColumn('payever_payment_issuer')) {
+            $table->addColumn(
+                'payever_payment_issuer',
+                'string',
+                [
+                    'notnull' => false,
+                    'length' => 255
+                ]
+            );
+        }
     }
 
     /**
@@ -393,6 +427,62 @@ class PayeverPaymentBundleInstaller implements Installation
         if (!$table->hasColumn('updated_at')) {
             $table->addColumn('updated_at', 'datetime', ['comment' => '(DC2Type:datetime)']);
         }
+    }
+
+    /**
+     * Create `payever_order_invoices` table
+     *
+     * @param Schema $schema
+     * @SuppressWarnings(PHPMD.ElseExpression)
+     */
+    private function createOrderInvoiceTable(Schema $schema): void
+    {
+        /**
+         * If migration is already completed it should not run again
+         */
+        if ($schema->hasTable('payever_order_invoices')) {
+            return;
+        }
+
+        $table = $schema->createTable('payever_order_invoices');
+        $table->addColumn(
+            'id',
+            'integer',
+            ['autoincrement' => true]
+        );
+
+        $table->addColumn(
+            'order_id',
+            'integer',
+            ['notnull' => true]
+        );
+
+        $table->addColumn(
+            'attachment_id',
+            'integer',
+            ['notnull' => true]
+        );
+
+        $table->addColumn(
+            'invoice_number',
+            'string',
+            ['notnull' => false, 'length' => 64]
+        );
+
+        $table->addColumn(
+            'payment_id',
+            'string',
+            ['notnull' => false, 'length' => 64]
+        );
+
+        $table->addColumn(
+            'external_id',
+            'string',
+            ['notnull' => false, 'length' => 64]
+        );
+
+        $table->setPrimaryKey(['id']);
+        $table->addIndex(['order_id']);
     }
 
     /**
@@ -671,6 +761,63 @@ class PayeverPaymentBundleInstaller implements Installation
                 ]
             );
         }
+    }
+
+    /**
+     * Creates the payever_payment_checkout table in the given schema.
+     *
+     * @param Schema $schema The schema in which to create the table.
+     *
+     * @return void
+     */
+    private function createPayeverCheckoutTable(Schema $schema): void
+    {
+        /**
+         * If migration is already completed it should not run again
+         */
+        if ($schema->hasTable('payever_payment_checkout')) {
+            return;
+        }
+
+        $table = $schema->createTable('payever_payment_checkout');
+
+        $table->addColumn(
+            'id',
+            'integer',
+            ['autoincrement' => true]
+        );
+
+        $table->addColumn(
+            'order_id',
+            'integer',
+            ['notnull' => false]
+        );
+
+        $table->addColumn(
+            'checkout_id',
+            'integer',
+            ['notnull' => true]
+        );
+
+        $table->addColumn(
+            'payment_id',
+            'string',
+            ['notnull' => true, 'length' => 64]
+        );
+
+        $table->addColumn(
+            'data',
+            'array',
+            [
+                'notnull' => false
+            ]
+        );
+
+        $table->addColumn('created_at', 'datetime', ['comment' => '(DC2Type:datetime)']);
+        $table->addColumn('updated_at', 'datetime', ['comment' => '(DC2Type:datetime)']);
+
+        $table->setPrimaryKey(['id']);
+        $table->addIndex(['checkout_id']);
     }
 
     /**

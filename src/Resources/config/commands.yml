@@ -1,0 +1,10 @@
+services:
+    _defaults:
+        public: false
+
+    Payever\Bundle\PaymentBundle\Command\ExecutePluginCommandsCommand:
+        arguments:
+            - '@oro_config.global'
+            - '@payever.service.job_handler.payment_command'
+        tags:
+            - { name: console.command }

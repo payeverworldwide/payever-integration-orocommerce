@@ -3,10 +3,24 @@ payeverpayment:
   type: annotation
   prefix: /payever
 
-payeverpayment_frontend:
+payeverpayment_payment:
   resource: "@PayeverPaymentBundle/Controller/Frontend/PaymentController.php"
   type: annotation
   prefix: /payever_payments
+  options:
+    frontend: true
+
+payeverpayment_callback:
+  resource: "@PayeverPaymentBundle/Controller/Frontend/CallbackController.php"
+  type: annotation
+  prefix: /payever_callback
+  options:
+    frontend: true
+
+payeverpayment_notification:
+  resource: "@PayeverPaymentBundle/Controller/Frontend/NotificationController.php"
+  type: annotation
+  prefix: /payever_notification
   options:
     frontend: true
 

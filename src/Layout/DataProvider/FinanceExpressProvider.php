@@ -178,6 +178,16 @@ class FinanceExpressProvider
     }
 
     /**
+     * Get Custom Widget Url.
+     *
+     * @return string|null
+     */
+    public function getWidgetUrl(): ?string
+    {
+        return $this->configManager->get('payever_payment.widget_url');
+    }
+
+    /**
      * Get Order Reference.
      *
      * @return string
@@ -197,7 +207,7 @@ class FinanceExpressProvider
         return $this->router->generate(
             'payever_payment_fe_success',
             [
-                QueryConstant::PARAMETER_TYPE => QueryConstant::CALLBACK_TYPE_SUCCESS
+                QueryConstant::PARAMETER_TYPE => QueryConstant::CALLBACK_TYPE_SUCCESS,
             ],
             UrlGeneratorInterface::ABSOLUTE_URL
         );
@@ -213,7 +223,7 @@ class FinanceExpressProvider
         return $this->router->generate(
             'payever_payment_fe_failure',
             [
-                QueryConstant::PARAMETER_TYPE => QueryConstant::CALLBACK_TYPE_FAILURE
+                QueryConstant::PARAMETER_TYPE => QueryConstant::CALLBACK_TYPE_FAILURE,
             ],
             UrlGeneratorInterface::ABSOLUTE_URL
         );
@@ -229,7 +239,7 @@ class FinanceExpressProvider
         return $this->router->generate(
             'payever_payment_fe_cancel',
             [
-                QueryConstant::PARAMETER_TYPE => QueryConstant::CALLBACK_TYPE_CANCEL
+                QueryConstant::PARAMETER_TYPE => QueryConstant::CALLBACK_TYPE_CANCEL,
             ],
             UrlGeneratorInterface::ABSOLUTE_URL
         );

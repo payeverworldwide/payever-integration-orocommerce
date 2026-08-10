@@ -45,3 +45,10 @@ services:
     parent: payever_payment.notification_handler.notification_handler_abstract
     tags:
       - { name: payever_payment.notification_handler }
+
+  payever_payment.notification_handler.b2b_payment:
+    class: Payever\Bundle\PaymentBundle\Service\Payment\Notification\Handler\B2BPaymentHandler
+    arguments:
+      - '@doctrine.orm.entity_manager'
+      - '@payever.service.helper.transaction'
+      - '@payever.service.logger'

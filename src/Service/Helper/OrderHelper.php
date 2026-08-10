@@ -69,7 +69,7 @@ class OrderHelper
     public function getReservedOrderIdentifier(): string
     {
         /** @var Order $order */
-        $order = $this->transactionHelper->getOrderRepository()->findOneBy([], ['id' => 'DESC']);
+        $order = $this->getOrderRepository()->findOneBy([], ['id' => 'DESC']);
         if (!$order) {
             return '0';
         }

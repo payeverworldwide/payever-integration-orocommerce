@@ -11,13 +11,14 @@ use Payever\Sdk\Core\Enum\ChannelSet;
 use Payever\Sdk\Payments\PaymentsApiClient;
 use Payever\Sdk\Payments\ThirdPartyPluginsApiClient;
 use Payever\Sdk\Payments\WidgetsApiClient;
+use Payever\Sdk\Plugins\PluginsApiClient;
+use Payever\Sdk\Plugins\Base\PluginRegistryInfoProviderInterface;
 use Psr\Log\LoggerInterface;
 
 class ServiceProvider
 {
-    /**
-     * @var TokenList
-     */
+    private PluginRegistryInfoProviderInterface $registryInfoProvider;
+
     private TokenList $tokenList;
 
     private ConfigManager $configManager;
@@ -30,15 +31,22 @@ class ServiceProvider
     private $paymentsApiClient;
 
     /**
+     * @var PluginsApiClient|null
+     */
+    private $pluginsApiClient;
+
+    /**
      * @var ClientConfiguration|null
      */
     private $clientConfiguration;
 
     public function __construct(
+        PluginRegistryInfoProviderInterface $registryInfoProvider,
         TokenList $tokenList,
         ConfigManager $configManager,
         LoggerInterface $logger
     ) {
+        $this->registryInfoProvider = $registryInfoProvider;
         $this->tokenList = $tokenList;
         $this->configManager = $configManager;
         $this->logger = $logger;
@@ -59,6 +67,19 @@ class ServiceProvider
         }
 
         return $this->paymentsApiClient;
+    }
+
+    public function getPluginsApiClient(): PluginsApiClient
+    {
+        if (!$this->pluginsApiClient) {
+            $this->pluginsApiClient = new PluginsApiClient(
+                $this->registryInfoProvider,
+                $this->getClientConfiguration(),
+                $this->tokenList
+            );
+        }
+
+        return $this->pluginsApiClient;
     }
 
     /**

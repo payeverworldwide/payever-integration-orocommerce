@@ -4,19 +4,21 @@ declare(strict_types=1);
 
 namespace Payever\Bundle\PaymentBundle\Form\Type;
 
-use Oro\Bundle\LocaleBundle\Form\Type\LocalizedFallbackValueCollectionType;
-use Oro\Bundle\CurrencyBundle\Form\Type\CurrencySelectionType;
 use Oro\Bundle\AddressBundle\Provider\CountryProvider;
+use Oro\Bundle\CurrencyBundle\Form\Type\CurrencySelectionType;
+use Oro\Bundle\LocaleBundle\Form\Type\LocalizedFallbackValueCollectionType;
 use Payever\Bundle\PaymentBundle\Entity\PayeverSettings;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -41,6 +43,7 @@ class PayeverSettingsType extends AbstractType
      * {@inheritdoc}
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -74,7 +77,10 @@ class PayeverSettingsType extends AbstractType
                 [
                     'label' => 'payever.settings.payment_method.label',
                     'required' => true,
-                    'constraints' => [new NotBlank()]
+                    'constraints' => [new NotBlank()],
+                    'attr' => [
+                        'readonly' => 'readonly',
+                    ]
                 ]
             )
             ->add(
@@ -82,7 +88,10 @@ class PayeverSettingsType extends AbstractType
                 TextType::class,
                 [
                     'label' => 'payever.settings.variant_id.label',
-                    'required' => false
+                    'required' => false,
+                    'attr' => [
+                        'readonly' => 'readonly',
+                    ]
                 ]
             )
             ->add(
@@ -118,6 +127,14 @@ class PayeverSettingsType extends AbstractType
                 ]
             )
             ->add(
+                'isB2BMethod',
+                CheckboxType::class,
+                [
+                    'label' => 'payever.settings.is_b2b_method.label',
+                    'required' => false
+                ]
+            )
+            ->add(
                 'instructionText',
                 TextareaType::class,
                 [
@@ -140,7 +157,8 @@ class PayeverSettingsType extends AbstractType
                     'label' => 'payever.settings.currencies.label',
                     'required' => true,
                     'multiple' => true,
-                    'constraints' => [new NotBlank()]
+                    'constraints' => [new NotBlank()],
+                    'disabled' => true,
                 ]
             )
             ->add(
@@ -214,11 +232,14 @@ class PayeverSettingsType extends AbstractType
                 ]
             )
         ;
+
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, [$this, 'onPreSetData'], -1);
     }
 
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults(
@@ -232,8 +253,35 @@ class PayeverSettingsType extends AbstractType
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function getBlockPrefix()
     {
         return self::BLOCK_PREFIX;
+    }
+
+    /**
+     * Pre set data event handler
+     */
+    public function onPreSetData(FormEvent $event)
+    {
+        /** @var PayeverSettings $data */
+        $data = $event->getData();
+        if ($data instanceof PayeverSettings && $data->getId()) {
+            if (!$data->getIsSubmitMethodEditable()) {
+                $event->getForm()->remove('isSubmitMethod');
+            }
+
+            $event->getForm()->add(
+                'currencies',
+                CurrencySelectionType::class,
+                [
+                    'label' => 'payever.settings.currencies.label',
+                    'required' => true,
+                    'multiple' => true,
+                    'currencies_list' => $data->getCurrencies(),
+                    'constraints' => [new NotBlank()],
+                ]
+            );
+        }
     }
 }

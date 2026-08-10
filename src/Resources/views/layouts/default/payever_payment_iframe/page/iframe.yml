@@ -1,7 +1,7 @@
 layout:
   actions:
     - '@setBlockTheme':
-        themes: '@PayeverPayment/layouts/default/payever_payment_payment/templates/payment.html.twig'
+        themes: '@PayeverPayment/layouts/default/payever_payment_iframe/templates/iframe.html.twig'
 
     - '@setOption':
         id: title

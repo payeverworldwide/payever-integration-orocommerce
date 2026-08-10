@@ -1,0 +1,13 @@
+{% block _payever_payment_terms_widget %}
+    {% set attr = layout_attr_defaults(attr, {
+        'data-page-component-module': 'oroui/js/app/components/view-component',
+        '~data-page-component-options': {
+            view: 'payeverpayment/js/app/components/payever-terms-component',
+            settings: settings,
+        },
+    }) %}
+
+    <div {{ block('block_attributes') }}>
+        {{ block_widget(block) }}
+    </div>
+{% endblock %}

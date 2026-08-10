@@ -55,15 +55,17 @@ class InvoiceService
      * @param Order $order
      * @param array $params
      *
-     * @return Attachment
+     * @return OrderInvoice
      */
-    public function createInvoice(Order $order, array $params = []): Attachment
+    public function createInvoice(Order $order, array $params = []): OrderInvoice
     {
+        $params[self::INVOICE_NUMBER] ??= $this->getNextOrderInvoiceNumber();
+        $params[self::INVOICE_DATE] ??= $this->getOrderInvoiceDate();
+        $params[self::INVOICE_COMMENT] ??= '';
+
         $attachment = $this->generateNewInvoice($order, $params);
 
-        $this->createOrderInvoice($order, $attachment, $params);
-
-        return $attachment;
+        return $this->createOrderInvoice($order, $attachment, $params);
     }
 
     /**
@@ -147,11 +149,11 @@ class InvoiceService
      */
     private function createInvoiceFile(Order $order, array $params = []): File
     {
-        $number = $params[self::INVOICE_NUMBER] ?? (string)$this->getNextOrderInvoiceNumber();
-        $date = $params[self::INVOICE_DATE] ?? $this->getOrderInvoiceDate();
-        $comment = $params[self::INVOICE_COMMENT] ?? '';
+        $number = $params[self::INVOICE_NUMBER];
+        $date = $params[self::INVOICE_DATE];
+        $comment = $params[self::INVOICE_COMMENT];
 
-        $invoicePdfContent = $this->invoicePdfGenerator->generate($order, $number, $date, $comment);
+        $invoicePdfContent = $this->invoicePdfGenerator->generate($order, (string)$number, $date, $comment);
 
         $file = $this->fileManager->writeToTemporaryFile(
             $invoicePdfContent,
@@ -170,11 +172,9 @@ class InvoiceService
      */
     private function createOroAttachment(Order $order, File $file, array $params = []): Attachment
     {
-        $comment = $params[self::INVOICE_COMMENT] ?? '';
-
         $attachment = new Attachment();
         $attachment->setFile($file);
-        $attachment->setComment($comment);
+        $attachment->setComment($params[self::INVOICE_COMMENT]);
         $attachment->setTarget($order);
 
         return $attachment;
@@ -184,17 +184,24 @@ class InvoiceService
      * @param Order $order
      * @param Attachment $attachment
      * @param array $params
-     * @return void
+     *
+     * @return OrderInvoice
      */
-    private function createOrderInvoice(Order $order, Attachment $attachment, array $params): void
+    private function createOrderInvoice(Order $order, Attachment $attachment, array $params): OrderInvoice
     {
         $invoice = new OrderInvoice();
         $invoice->setOrderId($order->getId());
         $invoice->setAttachmentId($attachment->getId());
         $invoice->setPaymentId($params[self::INVOICE_PAYMENT_ID]);
-        $invoice->setExternalId($params[self::INVOICE_EXTERNAL_ID]);
+        $invoice->setInvoiceNumber($params[self::INVOICE_NUMBER]);
+
+        if (!empty($params[self::INVOICE_EXTERNAL_ID])) {
+            $invoice->setExternalId($params[self::INVOICE_EXTERNAL_ID]);
+        }
 
         $this->manager->persist($invoice);
         $this->manager->flush();
+
+        return $invoice;
     }
 }

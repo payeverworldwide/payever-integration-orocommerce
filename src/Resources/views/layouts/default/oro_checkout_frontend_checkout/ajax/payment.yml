@@ -1,0 +1,16 @@
+layout:
+  actions:
+    - '@setBlockTheme':
+        themes:
+          - '@PayeverPayment/layouts/default/oro_checkout_frontend_checkout/templates/payment.html.twig'
+
+    - '@add':
+        id: payever_payment_terms
+        parentId: checkout_form
+        blockType: block
+        options:
+          visible: =data["payever_payment_terms_data_layer"].isVisibleOnPayment(context)
+          vars:
+            settings: =data["payever_payment_terms_data_layer"].getSettingsForTerms(context)
+
+  conditions: 'context["workflowStepName"]=="enter_payment"'

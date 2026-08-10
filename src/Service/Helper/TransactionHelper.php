@@ -10,11 +10,13 @@ use Oro\Bundle\OrderBundle\Entity\Order;
 use Oro\Bundle\OrderBundle\Entity\Repository\OrderRepository;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Oro\Bundle\PaymentBundle\Entity\Repository\PaymentTransactionRepository;
+use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
 use Oro\Bundle\PaymentBundle\Provider\PaymentTransactionProvider;
 
 class TransactionHelper
 {
     public const FIELD_ID = 'id';
+    public const CAPTURE_B2B = 'capture_b2b';
 
     private Registry $doctrine;
     private DoctrineHelper $doctrineHelper;
@@ -41,33 +43,44 @@ class TransactionHelper
         return $this->getOrderRepository()->findOneBy(['identifier' => $identifier]);
     }
 
-    public function getPaymentTransactionByID(int $id): ?PaymentTransaction
-    {
-        return $this->getPaymentTransactionRepository()->findOneBy(['id' => $id]);
-    }
-
     /**
      * Get Payment Transaction by action.
      *
      * @param Order $order
      * @param string $action
      *
-     * @return PaymentTransaction
+     * @return PaymentTransaction|null
      */
-    public function getPaymentTransaction(Order $order, string $action): PaymentTransaction
+    public function getPaymentTransaction(Order $order, string $action): ?PaymentTransaction
     {
-        $paymentTransaction = $this->paymentTransactionProvider->getPaymentTransaction(
+        return $this->paymentTransactionProvider->getPaymentTransaction(
             $order,
             [
-                'action' => $action
+                'action' => $action,
             ]
         );
+    }
 
-        if (!$paymentTransaction) {
-            throw new \InvalidArgumentException('Payment transaction is missing.');
-        }
-
-        return $paymentTransaction;
+    /**
+     * Get Payment Active Transaction by action.
+     *
+     * @param Order $order
+     *
+     * @return PaymentTransaction|null
+     */
+    public function getPaymentActiveTransaction(Order $order): ?PaymentTransaction
+    {
+        return $this->paymentTransactionProvider->getPaymentTransaction(
+            $order,
+            [
+                'successful' => true,
+                'action' => [
+                    self::CAPTURE_B2B,
+                    PaymentMethodInterface::CAPTURE,
+                    PaymentMethodInterface::AUTHORIZE
+                ],
+            ]
+        );
     }
 
     /**
@@ -149,6 +162,9 @@ class TransactionHelper
         $paymentTransaction->setTransactionOptions($transactionOptions);
     }
 
+    /**
+     * @return OrderRepository|null
+     */
     public function getOrderRepository(): ?OrderRepository
     {
         return $this->doctrine
@@ -156,10 +172,36 @@ class TransactionHelper
             ->getRepository(Order::class);
     }
 
+    /**
+     * @return PaymentTransactionRepository|null
+     */
     public function getPaymentTransactionRepository(): ?PaymentTransactionRepository
     {
         return $this->doctrine
             ->getManagerForClass(PaymentTransaction::class)
             ->getRepository(PaymentTransaction::class);
+    }
+
+    /**
+     * Check if order has paid-transactions.
+     *
+     * @param string $orderReference
+     * @return bool
+     */
+    public function isPaid(string $orderReference): bool
+    {
+        $order = $this->getOrderByIdentifier($orderReference);
+        if (!$order) {
+            return false;
+        }
+
+        if (
+            $this->getPaymentTransaction($order, PaymentMethodInterface::AUTHORIZE) ||
+            $this->getPaymentTransaction($order, PaymentMethodInterface::CAPTURE)
+        ) {
+            return true;
+        }
+
+        return false;
     }
 }

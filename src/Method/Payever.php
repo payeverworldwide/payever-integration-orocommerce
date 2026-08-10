@@ -11,6 +11,7 @@ use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
 use Payever\Bundle\PaymentBundle\Method\Config\PayeverConfigInterface;
 use Payever\Bundle\PaymentBundle\Method\PaymentAction\PaymentActionRegistry;
 use Payever\Bundle\PaymentBundle\Service\Company\CompanyCreditService;
+use Payever\Sdk\Payments\Enum\BusinessType;
 use Payever\Sdk\Payments\Enum\PaymentMethod;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -99,6 +100,14 @@ class Payever implements PaymentMethodInterface
     }
 
     /**
+     * @return array
+     */
+    public function getConfigs()
+    {
+        return $this->config->all();
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function isApplicable(PaymentContextInterface $context): bool
@@ -107,7 +116,7 @@ class Payever implements PaymentMethodInterface
             $this->logger->debug(
                 sprintf(
                     'Payment method "%s" has been hidden. Reason: %s',
-                    $this->getIdentifier(),
+                    $this->config->getPaymentMethod(),
                     'Hidden method'
                 )
             );
@@ -125,7 +134,7 @@ class Payever implements PaymentMethodInterface
             $this->logger->debug(
                 sprintf(
                     'Payment method "%s" has been hidden. Reason: %s',
-                    $this->getIdentifier(),
+                    $this->config->getPaymentMethod(),
                     'Total limits: ' . json_encode([$context->getTotal(), $this->config->getAllowedMinAmount(), $this->config->getAllowedMaxAmount()]) //phpcs:ignore
                 )
             );
@@ -151,17 +160,15 @@ class Payever implements PaymentMethodInterface
      * Check if its frontend request
      *
      * @return bool
-     * @SuppressWarnings(PHPMD.Superglobals)
      */
     private function isCheckoutRequest(): bool
     {
-        // @todo Use Symphony framework instead of the superglobals
-        $requestUri = $_SERVER['REQUEST_URI'] ?? '';
-        if (strpos($requestUri, self::CHECKOUT_ACTION_ROUTE) !== false) {
-            return true;
+        $request = $this->requestStack->getCurrentRequest();
+        if (!$request) {
+            return false;
         }
 
-        return false;
+        return strpos($request->getRequestUri(), self::CHECKOUT_ACTION_ROUTE) !== false;
     }
 
     /**
@@ -170,29 +177,53 @@ class Payever implements PaymentMethodInterface
      */
     private function shouldHideB2BMethod(PaymentContextInterface $context): bool
     {
-        $companyId = $context->getBillingAddress()->getPayeverExternalId();
-        if (!$companyId) {
+        $paymentMethod = $this->config->getPaymentMethod();
+        $billingAddress = $context->getBillingAddress();
+        if (!$billingAddress) {
             $this->logger->debug(
                 sprintf(
                     'Payment method "%s" has been hidden. Reason: %s',
-                    $this->getIdentifier(),
-                    'Missing company id'
+                    $paymentMethod,
+                    'billing address is missing'
                 )
             );
 
-            // @todo Hide method is company ID is missing
-            return false;
-            //return true;
+            return true;
+        }
+
+        if (empty($billingAddress->getOrganization())) {
+            $this->logger->debug(
+                sprintf(
+                    'Payment method "%s" has been hidden. Reason: %s',
+                    $paymentMethod,
+                    'b2b method requires company name'
+                )
+            );
+
+            return true;
         }
 
         // Check company limits
         if ($this->configManager->get('payever_payment.b2b_company_credit_line')) {
+            $companyId = $billingAddress->getPayeverExternalId();
+            if (empty($companyId)) {
+                $this->logger->debug(
+                    sprintf(
+                        'Payment method "%s" has been hidden. Reason: %s',
+                        $paymentMethod,
+                        'Missing company id'
+                    )
+                );
+
+                return true;
+            }
+
             $creditData = $this->companyCreditService->getCompanyCredit($companyId);
             if (!$creditData) {
                 $this->logger->debug(
                     sprintf(
                         'Payment method "%s" has been hidden. Reason: %s',
-                        $this->getIdentifier(),
+                        $paymentMethod,
                         'Unable to obtain a credit line'
                     )
                 );
@@ -204,7 +235,7 @@ class Payever implements PaymentMethodInterface
                 $this->logger->debug(
                     sprintf(
                         'Payment method "%s" has been hidden. Reason: %s',
-                        $this->getIdentifier(),
+                        $paymentMethod,
                         'Max invoice amount'
                     )
                 );

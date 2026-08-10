@@ -124,7 +124,7 @@ class OrderItemHelper
                 self::PROP_SKU                  => $sku,
                 self::PROP_REFERENCE            => (string) $orderLine->getEntityIdentifier(),
                 self::PROP_TYPE                 => self::TYPE_PRODUCT,
-                self::PROP_NAME                 => $orderLine->getProductName(),
+                self::PROP_NAME                 => $product->getDefaultName()->getString(),
                 self::PROP_UNIT_PRICE_INCL_TAX  => round($priceInclTax, 2),
                 self::PROP_UNIT_PRICE_EXCL_TAX  => round($priceExclTax, 2),
                 self::PROP_TOTAL_PRICE_INCL_TAX => round($priceInclTax * $qty, 2),

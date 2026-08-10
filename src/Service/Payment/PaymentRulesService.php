@@ -83,8 +83,9 @@ class PaymentRulesService
         $methodConfig = new PaymentMethodConfig();
         $methodConfig->setType($method); // oro_integration_channel: type_id
 
+        $availableCurrencies = $this->getAvailableCurrencies();
         foreach ($currencies as $currency) {
-            if (!in_array($currency, $this->getAvailableCurrencies(), true)) {
+            if (!in_array($currency, $availableCurrencies, true)) {
                 continue;
             }
 

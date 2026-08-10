@@ -7,6 +7,9 @@
             />
             <span>{{ view.options.description_offer|escape }}</span>
         </div>
+        {% if view.options.terms_method %}
+            <div class="container-terms-{{ view.options.payment_method }}"></div>
+        {% endif %}
     </div>
     {% set options = {
         totalValue: view.options.total_value

@@ -35,6 +35,7 @@ class PayeverView implements PaymentMethodViewInterface
             'description_offer' => $this->config->getDescriptionOffer(),
             'instruction_text' => $this->config->getInstructionText(),
             'thumbnail' => $this->config->getThumbnail(),
+            'terms_method' => $this->config->getPaymentMethod() === 'resurs_installment'
         ];
     }
 

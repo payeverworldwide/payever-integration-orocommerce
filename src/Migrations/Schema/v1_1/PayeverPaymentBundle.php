@@ -145,7 +145,7 @@ class PayeverPaymentBundle implements Migration, ExtendExtensionAwareInterface
     }
 
     /**
-     * Creates the order_totals table in the given schema.
+     * Creates the payever_order_invoices table in the given schema.
      *
      * @param Schema $schema The schema in which to create the table.
      *

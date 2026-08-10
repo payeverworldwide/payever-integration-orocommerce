@@ -23,6 +23,9 @@ class OrderInvoice
     #[ORM\Column(name: 'attachment_id', type: Types::INTEGER, nullable: false)]
     private int $attachmentId;
 
+    #[ORM\Column(name: 'invoice_number', type: Types::STRING, nullable: true)]
+    private string $invoiceNumber;
+
     #[ORM\Column(name: 'payment_id', type: Types::STRING, nullable: false)]
     private string $paymentId;
 
@@ -84,6 +87,26 @@ class OrderInvoice
     public function setAttachmentId(int $attachmentId): self
     {
         $this->attachmentId = $attachmentId;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getInvoiceNumber(): string
+    {
+        return $this->invoiceNumber;
+    }
+
+    /**
+     * @param string $invoiceNumber
+     *
+     * @return $this
+     */
+    public function setInvoiceNumber(string $invoiceNumber): self
+    {
+        $this->invoiceNumber = $invoiceNumber;
 
         return $this;
     }
